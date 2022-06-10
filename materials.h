@@ -4,7 +4,10 @@
 #include <string>
 using namespace std;
 
+#include <time.h>
+
 void calc_spaces(string target, int num);
+const string currentDate();
 
 class Materials{
 	string code;
@@ -17,6 +20,10 @@ class Materials{
 	string weight;
 	string open;
 	string ID;
+	vector <string> whist;
+	vector <string> dhist;
+	vector <vector <string>> history;
+
 public:
 	Materials() { ; }
 	Materials(string);
@@ -27,6 +34,7 @@ public:
 
 	void print_me() const;
 	void print_table() const;
+	void print_history() const;
 
 	Materials(string, const Materials&);
 
@@ -47,6 +55,10 @@ public:
 	string open_word() const;
 	bool isopen() const;
 	string get_ID() const { return ID; }
+	vector <vector <string>> get_hist() const { return history; }
+	int h_size() const { return history[0].size(); }
+	string get_whist(int a) { return history[0][a]; }
+	string get_dhist(int a) { return history[1][a]; }
 
 	void set_code(string a) { code = a; }
 	void set_name(string a) { name = a; }
@@ -55,7 +67,8 @@ public:
 	void set_own(string a) { owner = a; }
 	void set_size(string a) { size = a; }
 	void set_lot(string a) { lot = a; }
-	void set_weight(string a) { weight = a; }
+	void set_weight(string a);
+	void add_history(string a, string b);
 	void set_open(string a) { open = a; }
 	void set_ID(string a) { ID = a; }
 
@@ -67,6 +80,7 @@ void Materials::set_info(string a, string b, string c, string d, string e, strin
 
 Materials::Materials(string a, const Materials& target) {
 	set_info(a, target.get_name(), target.get_man(), target.get_date(), target.get_own(), target.get_size(), target.get_lot(), target.get_weight(), target.get_open(), target.get_ID());
+
 }
 
 Materials::Materials(string a) {
@@ -138,6 +152,18 @@ void Materials::print_table() const {
 	cout << endl;
 }
 
+void Materials::print_history() const {
+	for (int i = 0; i < h_size(); i++) {
+		cout << get_code();
+		calc_spaces(get_code(), 10);
+		cout << history[0][i];
+		calc_spaces(history[0][i], 10);
+		cout << history[1][i];
+		calc_spaces(history[1][i], 15);
+		cout << endl;
+	}
+}
+
 void calc_spaces(string target, int num) {
 	for (int i = target.size(); i <= num; i++) {
 		cout << " ";
@@ -157,4 +183,32 @@ string Materials::open_word() const {
 		return "yes";
 	else
 		return "no";
+}
+
+void Materials::set_weight(string a) {
+	weight = a;
+	if (history.size() != 0)
+		add_history(a, currentDate());
+}
+
+void Materials::add_history(string a, string b) {
+	if (history.size() == 0) {
+		whist.clear(); dhist.clear();
+		history.push_back(whist);
+		history.push_back(dhist);
+	}
+	history[0].push_back(a);
+	history[1].push_back(b);
+}
+
+const string currentDate() {
+	time_t     now = time(0);
+	struct tm  tstruct;
+	char       buf[80];
+	tstruct = *localtime(&now);
+	// Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
+	// for more information about date/time format
+	strftime(buf, sizeof(buf), "%m%d%Y", &tstruct);
+
+	return buf;
 }
