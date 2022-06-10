@@ -19,6 +19,7 @@ void write_jobs(vector <Jobs>& joblist);
 void write_history(vector <Materials>& thelist);
 void write_ireport(vector <Materials>& thelist);
 void write_hreport(vector <Materials>& thelist);
+void write_as_report(vector <Materials>& targets);
 
 //command center functions
 void cc_search(vector <Materials>& thelist);
@@ -225,7 +226,7 @@ void write_to_file(vector <Materials>& thelist, string filename) {
 void prep_screen(string menu) {
 	system("cls");
 	cout << "+-------------------------------------+\n";
-	cout << "|       QCML INVENTORY SYSTEM V1.5    |\n";
+	cout << "|       QCML INVENTORY SYSTEM V1.6    |\n";
 	cout << "+-------------------------------------+\n\n";
 
 	if (menu == "main")
@@ -393,6 +394,53 @@ void write_ireport(vector <Materials>& thelist) {
 	system(command);
 }
 
+void write_as_report(vector <Materials>& targets) {
+	string filename;
+	double total = 0;
+	filename.append(currentDate());
+	filename.append("_custom_report.txt");
+	ofstream writefile(filename);
+	if (!writefile.good()) {
+		cout << "There was a problem writing the file.\n";
+		return;
+	}
+	writefile << "BARCODE    MATERIAL             MANUFACTURER    DATE            OWNER                SIZE(um)   LOT        WEIGHT(kg) OPEN  ID       \n";
+	writefile << "-------------------------------------------------------------------------------------------------------------------------------------\n";
+	string buildline;
+	cout << "Writing your report! DO NOT CLOSE THE PROGRAM!\n";
+	for (int i = 0; i < targets.size(); i++) {
+		buildline.append(targets[i].get_code());
+		buildline.append(return_spaces(targets[i].get_code(), 10));
+		buildline.append(targets[i].get_name());
+		buildline.append(return_spaces(targets[i].get_name(), 20));
+		buildline.append(targets[i].get_man());
+		buildline.append(return_spaces(targets[i].get_man(), 15));
+		buildline.append(targets[i].get_date());
+		buildline.append(return_spaces(targets[i].get_date(), 15));
+		buildline.append(targets[i].get_own());
+		buildline.append(return_spaces(targets[i].get_own(), 20));
+		buildline.append(targets[i].get_size());
+		buildline.append(return_spaces(targets[i].get_size(), 10));
+		buildline.append(targets[i].get_lot());
+		buildline.append(return_spaces(targets[i].get_lot(), 10));
+		buildline.append(targets[i].get_weight());
+		total += stod(targets[i].get_weight());
+		buildline.append(return_spaces(targets[i].get_weight(), 10));
+		buildline.append(targets[i].get_open());
+		buildline.append(return_spaces(targets[i].get_open(), 5));
+		buildline.append(targets[i].get_ID());
+		writefile << buildline << endl;
+		buildline.clear();
+	}
+	writefile << "TOTAL WEIGHT: " << total << "kg\n";
+
+	writefile.close();
+	string tempcommand = "START WINWORD.exe ";
+	tempcommand.append(filename);
+	const char * command = tempcommand.c_str();
+	system(command);
+}
+
 void write_hreport(vector <Materials>& thelist) {
 	string filename;
 	filename.append(currentDate());
@@ -402,14 +450,20 @@ void write_hreport(vector <Materials>& thelist) {
 		cout << "There was a problem writing the file.\n";
 		return;
 	}
-	writefile << "BARCODE    WEIGHT(kg) DATE           \n";
-	writefile << "-------------------------------------\n";
+	writefile << "BARCODE    MATERIAL             MANUFACTURER    OWNER                WEIGHT(kg) DATE           \n";
+	writefile << "-----------------------------------------------------------------------------------------------\n";
 	string buildline;
 	cout << "Writing your report! DO NOT CLOSE THE PROGRAM!\n";
 	for (int i = 0; i < thelist.size(); i++) {
 		for (int j = 0; j < thelist[i].h_size(); j++) {
 			buildline.append(thelist[i].get_code());
 			buildline.append(return_spaces(thelist[i].get_code(), 10));
+			buildline.append(thelist[i].get_name());
+			buildline.append(return_spaces(thelist[i].get_name(), 20));
+			buildline.append(thelist[i].get_man());
+			buildline.append(return_spaces(thelist[i].get_man(), 15));
+			buildline.append(thelist[i].get_own());
+			buildline.append(return_spaces(thelist[i].get_own(), 20));
 			buildline.append(thelist[i].get_whist(j));
 			buildline.append(return_spaces(thelist[i].get_whist(j), 10));
 			buildline.append(thelist[i].get_dhist(j));
@@ -555,37 +609,70 @@ void cc_find(vector <Materials>& thelist) {
 	string temp;
 	Materials * target = nullptr;
 	vector <Materials*> matching;
+	vector <Materials> targets;
 	while (temp != "back") {
-		matching.clear();
 		cout << "\nEnter the field to search by or type 'back' to go back.\n";
 		cin >> temp;
 		if (temp == "name") {
 			cout << "Which material name are you looking for?\n";
 			cin >> temp;
-			for (int i = 0; i < thelist.size(); i++) {
-				if (thelist[i].get_name() == temp) {
-					target = &thelist[i];
-					matching.push_back(target);
+			if (matching.size() > 0) {
+				for (int i = 0; i < matching.size(); i++) {
+					if (matching[i] != nullptr) {
+						if (Materials(*matching[i]).get_name() != temp) {
+							matching[i] = nullptr;
+						}
+					}
+				}
+			}
+			else {
+				for (int i = 0; i < thelist.size(); i++) {
+					if (thelist[i].get_name() == temp) {
+						target = &thelist[i];
+						matching.push_back(target);
+					}
 				}
 			}
 		}
 		else if (temp == "manufacturer") {
 			cout << "Which manufacturer are you looking for?\n";
 			cin >> temp;
-			for (int i = 0; i < thelist.size(); i++) {
-				if (thelist[i].get_man() == temp) {
-					target = &thelist[i];
-					matching.push_back(target);
+			if (matching.size() > 0) {
+				for (int i = 0; i < matching.size(); i++) {
+					if (matching[i] != nullptr) {
+						if (Materials(*matching[i]).get_man() != temp) {
+							matching[i] = nullptr;
+						}
+					}
+				}
+			}
+			else {
+				for (int i = 0; i < thelist.size(); i++) {
+					if (thelist[i].get_man() == temp) {
+						target = &thelist[i];
+						matching.push_back(target);
+					}
 				}
 			}
 		}
 		else if (temp == "owner") {
 			cout << "Which owner are you looking for?\n";
 			cin >> temp;
-			for (int i = 0; i < thelist.size(); i++) {
-				if (thelist[i].get_own() == temp) {
-					target = &thelist[i];
-					matching.push_back(target);
+			if (matching.size() > 0) {
+				for (int i = 0; i < matching.size(); i++) {
+					if (matching[i] != nullptr) {
+						if (Materials(*matching[i]).get_own() != temp) {
+							matching[i] = nullptr;
+						}
+					}
+				}
+			}
+			else {
+				for (int i = 0; i < thelist.size(); i++) {
+					if (thelist[i].get_own() == temp) {
+						target = &thelist[i];
+						matching.push_back(target);
+					}
 				}
 			}
 		}
@@ -594,50 +681,136 @@ void cc_find(vector <Materials>& thelist) {
 			cin >> temp;
 			if (temp == "today")
 				temp = currentDate();
-			for (int i = 0; i < thelist.size(); i++) {
-				if (thelist[i].get_date() == temp) {
-					target = &thelist[i];
-					matching.push_back(target);
+			if (matching.size() > 0) {
+				for (int i = 0; i < matching.size(); i++) {
+					if (matching[i] != nullptr) {
+						if (Materials(*matching[i]).get_date() != temp) {
+							matching[i] = nullptr;
+						}
+					}
+				}
+			}
+			else {
+				for (int i = 0; i < thelist.size(); i++) {
+					if (thelist[i].get_date() == temp) {
+						target = &thelist[i];
+						matching.push_back(target);
+					}
 				}
 			}
 		}
 		else if (temp == "size") {
 			cout << "What size are you looking for?\n";
 			cin >> temp;
-			for (int i = 0; i < thelist.size(); i++) {
-				if (thelist[i].get_size() == temp) {
-					target = &thelist[i];
-					matching.push_back(target);
+			if (matching.size() > 0) {
+				for (int i = 0; i < matching.size(); i++) {
+					if (matching[i] != nullptr) {
+						if (Materials(*matching[i]).get_size() != temp) {
+							matching[i] = nullptr;
+						}
+					}
+				}
+			}
+			else {
+				for (int i = 0; i < thelist.size(); i++) {
+					if (thelist[i].get_size() == temp) {
+						target = &thelist[i];
+						matching.push_back(target);
+					}
 				}
 			}
 		}
 		else if (temp == "lot") {
 			cout << "Which lot # are you looking for?\n";
 			cin >> temp;
-			for (int i = 0; i < thelist.size(); i++) {
-				if (thelist[i].get_lot() == temp) {
-					target = &thelist[i];
-					matching.push_back(target);
+			if (matching.size() > 0) {
+				for (int i = 0; i < matching.size(); i++) {
+					if (matching[i] != nullptr) {
+						if (Materials(*matching[i]).get_lot() != temp) {
+							matching[i] = nullptr;
+						}
+					}
+				}
+			}
+			else {
+				for (int i = 0; i < thelist.size(); i++) {
+					if (thelist[i].get_lot() == temp) {
+						target = &thelist[i];
+						matching.push_back(target);
+					}
 				}
 			}
 		}
 		else if (temp == "ID") {
 			cout << "Which ID are you looking for?\n";
 			cin >> temp;
-			for (int i = 0; i < thelist.size(); i++) {
-				if (thelist[i].get_ID() == temp) {
-					target = &thelist[i];
-					matching.push_back(target);
+			if (matching.size() > 0) {
+				for (int i = 0; i < matching.size(); i++) {
+					if (matching[i] != nullptr) {
+						if (Materials(*matching[i]).get_ID() != temp) {
+							matching[i] = nullptr;
+						}
+					}
+				}
+			}
+			else {
+				for (int i = 0; i < thelist.size(); i++) {
+					if (thelist[i].get_ID() == temp) {
+						target = &thelist[i];
+						matching.push_back(target);
+					}
 				}
 			}
 		}
-		if (matching.size() != 0) {
+		else if (temp == "weight") {
+			cout << "How much weight are you looking for?\n";
+			cin >> temp;
+			if (matching.size() > 0) {
+				for (int i = 0; i < matching.size(); i++) {
+					if (matching[i] != nullptr) {
+						if (Materials(*matching[i]).get_weight() != temp) {
+							matching[i] = nullptr;
+						}
+					}
+				}
+			}
+			else {
+				for (int i = 0; i < thelist.size(); i++) {
+					if (thelist[i].get_weight() == temp) {
+						target = &thelist[i];
+						matching.push_back(target);
+					}
+				}
+			}
+		}
+		if (matching.size() > 0) {
 			prep_screen("listing");
 			for (int i = 0; i < matching.size(); i++) {
-				Materials(*matching[i]).print_table();
+				if (matching[i] != nullptr) {
+					Materials(*matching[i]).print_table();
+				}
 			}
-			cout << "\nThis is a list of the matching materials. Enter any key to go back.\n";
+			cout << "\nThis is a list of the matching materials.\n";
+			cout << "You can generate a report of the list, narrow it down/refine it, go back, or clear/restart the search.\n";
 			cin >> temp;
+			if (temp == "r" || temp == "report") {
+				for (int i = 0; i < matching.size(); i++) {
+					if (matching[i] != nullptr) {
+						targets.push_back(Materials(*matching[i]));
+					}
+				}
+				write_as_report(targets);
+			}
+			else if (temp == "narrow" || temp == "refine") {
+				continue;
+			}
+			else if  (temp == "back") {
+				matching.clear();
+				targets.clear();
+				return;
+			}
+			matching.clear();
+			targets.clear();
 		}
 		else if (temp != "back") {
 			cout << "\nThere were no matching materials. Enter any key to try again.\n";
@@ -1069,8 +1242,17 @@ void cc_recent(vector <Materials>& thelist, vector <int>& recent) {
 	for (int i = 0; i < recent.size(); i++) {
 		thelist[recent[i]].print_table();
 	}
-	cout << "\nHit any key to leave this menu.\n";
+	cout << "Would you like to generate a report of this list?\n";
+	cout << "\nOtherwise, hit any key or type 'back' to leave this menu.\n";
 	cin >> temp;
+	if (temp == "y" || temp == "yes") {
+		vector <Materials> targets;
+		for (int i = 0; i < recent.size(); i++) {
+			targets.push_back(thelist[recent[i]]);
+		}
+		write_as_report(targets);
+	}
+
 	return;
 }
 
