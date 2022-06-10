@@ -54,7 +54,7 @@ public:
 };
 
 void Jobs::add_sweight(string a) {
-	weight_in += + stod(a);
+	weight_in += stod(a);
 }
 
 void Jobs::add_eweight(string a) {

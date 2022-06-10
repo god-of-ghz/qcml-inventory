@@ -129,7 +129,7 @@ void Materials::print_me() const {
 	cout << "The material's owner is " << get_own() << endl;
 	cout << "The material is " << get_size() << " microns in size.\n";
 	cout << "This material is from lot " << get_lot() << endl;
-	cout << "This package has " << get_weight() << " lbs left.\n";
+	cout << "This package has " << get_weight() << " kg left.\n";
 	cout << "Has this material been opened? " << open_word() << endl;
 	cout << "The material's ID is " << get_ID() << endl;
 }

@@ -204,3 +204,12 @@ o	‘find’ now properly resets after each search, before it accumulated all th
 o	When typing in ‘back’ during a new material addition in ‘add,’ the new material addition is properly canceled
 -	Functional change: whenever a date is asked for, entering ‘today’ will put in the current date
 
+V1.6 11/12/2014
+-	Added functionality: ‘find’ can now generate a report of the results after searching
+-	Added functionality: ‘find’ can now refine search results or start a brand new search and exit directly to main menu while in the middle of a search
+-	Updated history under ‘reports’ to provide clearer, more usable reports
+o	Now gives the material name, manufacturer and owner, in addition to the barcode and weight/date history
+-	Updated menu heading
+-	Bug fixes:
+o	‘find’ did not have the option to search by weight correctly
+o	Updated ‘search’ to use ‘kg’ instead of displaying ‘lbs’
