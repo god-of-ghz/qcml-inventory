@@ -168,3 +168,19 @@ o	‘report’
 o	Asks the user if he or she would like to generate a report and of what
 o	Writes that data to a .txt file and opens it in Microsoft Office Word for printing
 -	Functional change: when the properties of one material are copied to another, weight will not be included
+o	‘Add  (is this material like any other?) yes’ will now prompt the user to input the correct weight right away
+o	‘Edit  clone’ will now prompt the user to enter the correct weight
+-	Update ‘recent’ function
+o	‘recent’ is back!
+o	Changed functionality: recent now only shows recently changed materials
+	Only materials edited in ‘add’ or ‘edit’ will be added
+-	Updated menu heading
+-	Slight performance improvements to:
+o	‘edit’
+o	‘recent’
+-	Program now writes ‘data.qcml’ to intelligently include spaces for proper formatting
+o	Easier to create a report
+-	Bug fixes:
+o	Removed false history that is created when a new material is added and copied
+o	‘Add  (is this material like any other?)’ will now only proceed if an answer is given as ‘y’, ‘yes’, ‘n’, or ‘no’
+
