@@ -5,16 +5,19 @@
 using namespace std;
 
 #include <materials.h>
+#include <time.h>
 
-//void command_center(vector <Materials>& thelist);
-vector <string> file_to_vec(ifstream& reading, vector <string> words);
 vector <Materials> file_to_vec(ifstream& reading);
+void read_history(vector <Materials>& thelist);
 void write_to_file(vector <Materials>& thelist, string filename);
+void write_history(vector <Materials>& thelist);
 
 Materials process_material(string * info_set);
 Materials * search_material(vector <Materials>& thelist, string a);
 int find_index(vector <Materials>& thelist, Materials * target);
-//Materials * edit_material(Materials * target, string function);
+int find_index(vector <Materials>& thelist, string code);
+
+const string currentDate();
 
 void experiment(vector <Materials>& thelist);
 
@@ -27,10 +30,11 @@ void command_center(vector <Materials>& thelist) {
 	string temp;
 	Materials * target = nullptr;
 	vector <Materials*> recent;
+	vector <Materials*> matching;
 	Materials temp_mat;
 	string * info_set;
 	while (1) {
-		//check_recent(recent);
+		check_recent(recent);
 		prep_screen("main");
 		cout << "\nEnter a command.\n\n";
 		cin >> command;
@@ -40,14 +44,105 @@ void command_center(vector <Materials>& thelist) {
 			while (temp != "back") {
 				cout << "\nEnter the barcode for the material or type 'back' to go back. \n";
 				cin >> temp;
-				target = search_material(thelist, temp);
-				if (target == nullptr) {
-					if (temp != "back")
+				if (temp != "back") {
+					target = search_material(thelist, temp);
+					if (target == nullptr) {
 						cout << "The material was not found, please try again.\n";
-					continue;
+						continue;
+					}
+					recent.push_back(target);
+					Materials(*target).print_me();
 				}
-				recent.push_back(target);
-				Materials(*target).print_me();
+			}
+		}
+		else if (command == "find") {
+			prep_screen("searching");
+			matching.clear();
+			while (temp != "back") {
+				cout << "\nEnter the field to search by or type 'back' to go back.\n";
+				cin >> temp;
+				if (temp == "name") {
+					cout << "Which material name are you looking for?\n";
+					cin >> temp;
+					for (int i = 0; i < thelist.size(); i++) {
+						if (thelist[i].get_name() == temp) {
+							target = &thelist[i];
+							matching.push_back(target);
+						}
+					}
+				}
+				else if (temp == "manufacturer") {
+					cout << "Which manufacturer are you looking for?\n";
+					cin >> temp;
+					for (int i = 0; i < thelist.size(); i++) {
+						if (thelist[i].get_man() == temp) {
+							target = &thelist[i];
+							matching.push_back(target);
+						}
+					}
+				}
+				else if (temp == "owner") {
+					cout << "Which owner are you looking for?\n";
+					cin >> temp;
+					for (int i = 0; i < thelist.size(); i++) {
+						if (thelist[i].get_own() == temp) {
+							target = &thelist[i];
+							matching.push_back(target);
+						}
+					}
+				}
+				else if (temp == "date") {
+					cout << "Which date are you looking for?\n";
+					cin >> temp;
+					for (int i = 0; i < thelist.size(); i++) {
+						if (thelist[i].get_date() == temp) {
+							target = &thelist[i];
+							matching.push_back(target);
+						}
+					}
+				}
+				else if (temp == "size") {
+					cout << "Which size are you looking for?\n";
+					cin >> temp;
+					for (int i = 0; i < thelist.size(); i++) {
+						if (thelist[i].get_size() == temp) {
+							target = &thelist[i];
+							matching.push_back(target);
+						}
+					}
+				}
+				else if (temp == "lot") {
+					cout << "Which lot # are you looking for?\n";
+					cin >> temp;
+					for (int i = 0; i < thelist.size(); i++) {
+						if (thelist[i].get_lot() == temp) {
+							target = &thelist[i];
+							matching.push_back(target);
+						}
+					}
+				}
+				else if (temp == "ID") {
+					cout << "Which ID are you looking for?\n";
+					cin >> temp;
+					for (int i = 0; i < thelist.size(); i++) {
+						if (thelist[i].get_ID() == temp) {
+							target = &thelist[i];
+							matching.push_back(target);
+						}
+					}
+				}
+				if (matching.size() != 0) {
+					prep_screen("listing");
+					for (int i = 0; i < matching.size(); i++) {
+						Materials(*matching[i]).print_table();
+					}
+					cout << "\nThis is a list of the matching materials. Enter any key to go back.\n";
+					cin >> temp;
+				}
+				else if (temp != "back") {
+					cout << "\nThere were no matching materials. Enter any key to try again.\n";
+					cin >> temp;
+				}
 			}
 		}
 		else if (command == "edit") {
@@ -69,6 +164,7 @@ void command_center(vector <Materials>& thelist) {
 				if (temp == "code" || temp == "barcode") {
 					while (1) {
 						cout << "Enter the new barcode, please no more than 9 digits or less than 3.\n";
+						cout << "The current value for this field is: " << thelist[index].get_code() << endl;
 						cin >> temp;
 						target = search_material(thelist, temp);
 						if (target != nullptr) {
@@ -88,6 +184,7 @@ void command_center(vector <Materials>& thelist) {
 				else if (temp == "name") {
 					while (1) {
 						cout << "Enter the new material name, less than 20 characters.\n";
+						cout << "The current value for this field is: " << thelist[index].get_name() << endl;
 						cin >> temp;
 						if (temp.size() < 20) {
 							thelist[index].set_name(temp);
@@ -100,6 +197,7 @@ void command_center(vector <Materials>& thelist) {
 				else if (temp == "manufacturer" || temp == "manufac" || temp == "man") {
 					while (1) {
 						cout << "Enter the new manufacturer name, less than 15 characters.\n";
+						cout << "The current value for this field is: " << thelist[index].get_man() << endl;
 						cin >> temp;
 						if (temp.size() < 15) {
 							thelist[index].set_man(temp);
@@ -112,6 +210,7 @@ void command_center(vector <Materials>& thelist) {
 				else if (temp == "date") {
 					while (1) {
 						cout << "Enter the new date, in the format MMDDYYYY.\n";
+						cout << "The current value for this field is: " << thelist[index].get_date() << endl;
 						cin >> temp;
 						if (temp.size() == 8) {
 							thelist[index].set_date(temp);
@@ -124,6 +223,7 @@ void command_center(vector <Materials>& thelist) {
 				else if (temp == "owner" || temp == "own") {
 					while (1) {
 						cout << "Enter the name of the owner, less than 20 characters.\n";
+						cout << "The current value for this field is: " << thelist[index].get_own() << endl;
 						cin >> temp;
 						if (temp.size() < 20) {
 							thelist[index].set_own(temp);
@@ -136,6 +236,7 @@ void command_center(vector <Materials>& thelist) {
 				else if (temp == "size") {
 					while (1) {
 						cout << "Enter the size of the material's particles.\n";
+						cout << "The current value for this field is: " << thelist[index].get_size() << endl;
 						cin >> temp;
 						if (temp.size() < 10) {
 							thelist[index].set_size(temp);
@@ -148,6 +249,7 @@ void command_center(vector <Materials>& thelist) {
 				else if (temp == "lot") {
 					while (1) {
 						cout << "Enter the lot number, less than 10 characters.\n";
+						cout << "The current value for this field is: " << thelist[index].get_lot() << endl;
 						cin >> temp;
 						if (temp.size() < 10) {
 							thelist[index].set_lot(temp);
@@ -160,6 +262,7 @@ void command_center(vector <Materials>& thelist) {
 				else if (temp == "weight") {
 					while (1) {
 						cout << "Enter the remaining weight of the material, in lbs, less than 10 significant digits.\n";
+						cout << "The current value for this field is: " << thelist[index].get_weight() << endl;
 						cin >> temp;
 						if (temp.size() < 10) {
 							thelist[index].set_weight(temp);
@@ -180,6 +283,7 @@ void command_center(vector <Materials>& thelist) {
 				else if (temp == "ID") {
 					while (1) {
 						cout << "Enter the job ID of the material, less than 10 characters.\n";
+						cout << "The current value for this field is: " << thelist[index].get_ID() << endl;
 						cin >> temp;
 						if (temp.size() < 10) {
 							thelist[index].set_ID(temp);
@@ -187,6 +291,19 @@ void command_center(vector <Materials>& thelist) {
 						}
 						else
 							cout << "That ID is too long, please enter one less than 10 characters.\n";
+					}
+				}
+				else if (temp == "clone") {
+					while (1) {
+						cout << "Enter the barcode of the material whose properties you want to copy to this material.\n";
+						cin >> temp;
+						target = search_material(thelist, temp);
+						if (target != nullptr) {
+							thelist[index] = Materials(*target);
+							break;
+						}
+						else
+							cout << "The material to be cloned was not found, please enter a valid barcode.\n";
 					}
 				}
 				else {
@@ -208,6 +325,7 @@ void command_center(vector <Materials>& thelist) {
 		else if (command == "help") {
 			prep_screen("helping");
 			cout << "Use 'search' or 'lookup' to look up info for different materials.\n";
+			cout << "Use 'find' to gather a list of materials matching a certain criteria.\n";
 			cout << "Use 'edit' to alter or update the info for each material.\n";
 			cout << "In the main menu, use 'exit' to exit to the program and save changes to the database.\n";
 			cout << "Enter 'back' in any function to return to the main menu.\n";
@@ -216,7 +334,7 @@ void command_center(vector <Materials>& thelist) {
 			cout << "To add a new material, use 'add'.\n";
 			cout << "For information about this program, type 'about'.\n";
 			cout << "\nContact Sameer Sajid for help with any bugs or problems during usage.\n";
-			cout << "ssajid@qcml.org\n401-864-5676.\n";
+			cout << "\nssajid@qcml.org\n401-864-5676\n";
 			cout << "\nHit any key to leave this menu.\n";
 			cin >> temp;
 		}
@@ -226,6 +344,7 @@ void command_center(vector <Materials>& thelist) {
 			cin >> temp;
 			if (temp == "yes" || temp == "y") {
 				write_to_file(thelist, "data.qcml");
+				write_history(thelist);
 			}
 			cout << "Changes saved";
 		}
@@ -236,6 +355,22 @@ void command_center(vector <Materials>& thelist) {
 			}
 			cout << "\nHit any key to go back \n";
 			cin >> temp;
+		}
+		else if (command == "history") {
+			prep_screen("history");
+			while (temp != "back") {
+				cin >> temp;
+				if (temp != "back") {
+					target = search_material(thelist, temp);
+					if (target == nullptr) {
+						cout << "That material could not be found, please try again.\n";
+						continue;
+					}
+					else {
+						Materials(*target).print_history();
+					}
+				}
+			}
 		}
 		else if (command == "recent") {
 			prep_screen("recent");
@@ -425,25 +560,17 @@ void main() {
 	}
 	cout << "\nLoading, please wait...\n";
 	vector <Materials> thelist = file_to_vec(readfile);
-	cout << "Database loaded!.\n";
 	readfile.close();
+	read_history(thelist);
+	cout << "Database loaded!.\n";
+	
 
 	command_center(thelist);
 
 	prep_screen("exiting");
 	write_to_file(thelist, filename);
+	write_history(thelist);
 	
-}
-
-vector <string> file_to_vec(ifstream& reading, vector <string> words) {
-	string temp;
-	cout << "starting read\n";
-	reading >> temp;
-	while (!reading.eof()) {
-		words.push_back(temp);
-		reading >> temp;
-	}
-	return words;
 }
 
 vector <Materials> file_to_vec(ifstream& reading) {
@@ -525,7 +652,7 @@ void write_to_file(vector <Materials>& thelist, string filename) {
 void prep_screen(string menu) {
 	system("cls");
 	cout << "+-------------------------------------+\n";
-	cout << "|       QCML INVENTORY SYSTEM V1.1    |\n";
+	cout << "|       QCML INVENTORY SYSTEM V1.2    |\n";
 	cout << "+-------------------------------------+\n\n";
 
 	if (menu == "main")
@@ -548,12 +675,19 @@ void prep_screen(string menu) {
 		cout << "~~~~~~~~~~~~NEW MATERIAL ENTRY~~~~~~~~~~\n\n";
 	else if (menu == "about")
 		cout << "~~~~~~~~~~~~~~~~~~ABOUT~~~~~~~~~~~~~~~~~\n\n";
+	else if (menu == "history")
+		cout << "~~~~~~~~~~~~~~~~~HISTORY~~~~~~~~~~~~~~~~\n\n";
 	else
 		cout << "~~~~~~~~~~~~~~~COMING SOON!~~~~~~~~~~~~~\n\n";
 
 	if (menu == "listing" || menu == "recent") {
 		cout << "BARCODE    MATERIAL             MANUFACTURER    DATE            OWNER                SIZE       LOT        WEIGHT     OPEN  ID        \n";
 		cout << "--------------------------------------------------------------------------------------------------------------------------------------\n";
+	}
+	else if (menu == "history") {
+		cout << "Enter the barcode of the material whose history you would like or type 'back.\n\n";
+		cout << "BARCODE    WEIGHT     DATE           \n";
+		cout << "-------------------------------------\n";
 	}
 
 	return;
@@ -569,9 +703,59 @@ int find_index(vector <Materials>& thelist, Materials * target) {
 	}
 }
 
+int find_index(vector <Materials>& thelist, string a) {
+	for (int i = 0; i < thelist.size(); i++) {
+		if (thelist[i].get_code() == a)
+			return i;
+	}
+}
+
 void check_recent(vector <Materials*>& recent) {
 	if (recent.size() > 1000)
 		recent.clear();
+}
+
+void read_history(vector <Materials>& thelist) {
+	ifstream readfile("history.qcml");
+	string temp;
+	string tempc, tempw, tempd;
+	int index;
+	if (!readfile.is_open()) {
+		while (!readfile.is_open()) {
+			cout << "There was a problem loading the default directory for the material history. Please enter the filename.\n";
+			cin >> temp;
+			readfile.open(temp);
+		}
+	}
+	while (!readfile.eof()) {
+		readfile >> tempc;
+		index = find_index(thelist, tempc);
+		readfile >> tempw;
+		readfile >> tempd;
+		thelist[index].add_history(tempw, tempd);
+	}
+	readfile.close();
+}
+
+void write_history(vector <Materials>& thelist) {
+	ofstream writefile("history.qcml");
+	string tempc, tempw, tempd, buildline;
+	if (!writefile.good()) {
+		cout << "There was a problem writing the file.\n";
+		return;
+	}
+	for (int i = 0; i < thelist.size(); i++) {
+		for (int j = 0; j < thelist[i].h_size(); j++) {
+			buildline.append(thelist[i].get_code());
+			buildline.append("	");
+			buildline.append(thelist[i].get_whist(j));
+			buildline.append("	");
+			buildline.append(thelist[i].get_dhist(j));
+			writefile << buildline << endl;
+			buildline.clear();
+		}
+	}
+	writefile.close();
 }
 
 void experiment(vector <Materials>& thelist) {
