@@ -53,3 +53,4 @@ o	Program will still default to writing to ‘data.qcml’ using ‘save’ even
 o	‘add’ and ‘edit’ will now appropriately check to make sure a barcode is or isn’t being used
 o	‘recent’ has been temporarily disabled to prevent program crashing
 o	Fixed potential bugs that could have resulted in runtime errors
+
