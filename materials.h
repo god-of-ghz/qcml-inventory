@@ -21,6 +21,7 @@ class Materials{
 	string weight;
 	string open;
 	string ID;
+	vector <string> jobs;
 	vector <string> whist;
 	vector <string> dhist;
 	vector <vector <string>> history;
@@ -72,7 +73,9 @@ public:
 	void add_history(string a, string b);
 	void clear_history();
 	void set_open(string a) { open = a; }
-	void set_ID(string a) { ID = a; }
+	void set_ID(string a);
+	void set_ID_ONLY(string a) { ID = a; }
+	void add_job(string a) { jobs.push_back(a); }
 
 };
 
@@ -115,7 +118,7 @@ void Materials::clear() {
 }
 
 void Materials::operator= (const Materials& target) {
-	set_info(code, target.get_name(), target.get_man(), target.get_date(), target.get_own(), target.get_size(), target.get_lot(), weight, target.get_open(), target.get_ID());
+	set_info(code, target.get_name(), target.get_man(), target.get_date(), target.get_own(), target.get_size(), target.get_lot(), weight, target.get_open(), "N/A");
 }
 
 void Materials::print_me() const {
@@ -203,6 +206,12 @@ void Materials::clear_history() {
 		history[1].clear();
 	}
 	history.clear();
+}
+
+void Materials::set_ID(string a) {
+	ID = a;
+	if (ID != "N/A" && ID != "n/a" && ID != "-")
+		jobs.push_back(a);
 }
 
 void calc_spaces(string target, int num) {

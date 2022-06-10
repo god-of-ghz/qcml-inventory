@@ -184,4 +184,23 @@ o	Easier to create a report
 o	Removed false history that is created when a new material is added and copied
 o	‘Add  (is this material like any other?)’ will now only proceed if an answer is given as ‘y’, ‘yes’, ‘n’, or ‘no’
 
+V1.5 8/28/2014
+-	‘report’ doesn’t ask for a yes or no answer anymore before giving the option to generate a report
+-	The main menu now gives a list of commands before the user is prompted to enter one
+-	Updated ‘help’ menu
+-	Update menu heading
+-	All functions have been removed from ‘command_center’ and now have their own proper separate function names titled ‘cc_<function name>’
+o	Ex. Instead of create a loop when ‘edit’ is entered, command center now calls a function called ‘cc_edit’ and passes the list of materials to it.
+o	No functional changes otherwise
+o	In the future, will allow these functions to talk to each other directly
+-	New function!
+o	‘jobs’
+o	User has the choice to either create a new job or view existing ones
+o	In a new job, the job’s starting date is entered, as well as a list of the associated materials. A preview of the weight and list of materials is shown during entry.
+o	When viewing or editing an existing job, user has a choice to either finish the job, add more materials or simply view the info for the job
+o	Adding more materials continues the job from where it was started, finishing it marks the end date and calculates the ending weight based on the amount of material removed
+-	Bug fixes
+o	‘find’ now properly resets after each search, before it accumulated all the previous search results as well
+o	When typing in ‘back’ during a new material addition in ‘add,’ the new material addition is properly canceled
+-	Functional change: whenever a date is asked for, entering ‘today’ will put in the current date
 
