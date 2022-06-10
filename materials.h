@@ -7,6 +7,7 @@ using namespace std;
 #include <time.h>
 
 void calc_spaces(string target, int num);
+string return_spaces(string target, int num);
 const string currentDate();
 
 class Materials{
@@ -69,6 +70,7 @@ public:
 	void set_lot(string a) { lot = a; }
 	void set_weight(string a);
 	void add_history(string a, string b);
+	void clear_history();
 	void set_open(string a) { open = a; }
 	void set_ID(string a) { ID = a; }
 
@@ -107,12 +109,13 @@ void Materials::clear() {
 	size.clear();
 	lot.clear();
 	weight.clear();
-	open = "no";
+	open.clear();
 	ID.clear();
+	clear_history();
 }
 
 void Materials::operator= (const Materials& target) {
-	set_info(code, target.get_name(), target.get_man(), target.get_date(), target.get_own(), target.get_size(), target.get_lot(), target.get_weight(), target.get_open(), target.get_ID());
+	set_info(code, target.get_name(), target.get_man(), target.get_date(), target.get_own(), target.get_size(), target.get_lot(), weight, target.get_open(), target.get_ID());
 }
 
 void Materials::print_me() const {
@@ -164,13 +167,6 @@ void Materials::print_history() const {
 	}
 }
 
-void calc_spaces(string target, int num) {
-	for (int i = target.size(); i <= num; i++) {
-		cout << " ";
-	}
-}
-
-
 bool Materials::isopen() const {
 	if (open == "1")
 		return true;
@@ -201,6 +197,26 @@ void Materials::add_history(string a, string b) {
 	history[1].push_back(b);
 }
 
+void Materials::clear_history() {
+	if (history.size() == 2) {
+		history[0].clear();
+		history[1].clear();
+	}
+	history.clear();
+}
+
+void calc_spaces(string target, int num) {
+	cout << return_spaces(target, num);
+}
+
+string return_spaces(string target, int num) {
+	string spaces;
+	for (int i = target.size(); i <= num; i++) {
+		spaces.append(" ");
+	}
+	return spaces;
+}
+
 const string currentDate() {
 	time_t     now = time(0);
 	struct tm  tstruct;
@@ -209,6 +225,5 @@ const string currentDate() {
 	// Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
 	// for more information about date/time format
 	strftime(buf, sizeof(buf), "%m%d%Y", &tstruct);
-
 	return buf;
 }
