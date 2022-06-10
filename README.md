@@ -213,3 +213,12 @@ o	Now gives the material name, manufacturer and owner, in addition to the barcod
 -	Bug fixes:
 o	‘find’ did not have the option to search by weight correctly
 o	Updated ‘search’ to use ‘kg’ instead of displaying ‘lbs’
+
+ V1.7 12/3/2014
+-	New function! ‘lot history’ or ‘lots’ provides a weight history for an entire lot of powder
+o	User enters either the barcode of a member of a lot or the lot# directly to generate the report
+o	Lot histories are not saved and are rebuilt each time one is desired
+-	Added functionality: ‘lot history’ can also generate a full report of all lots in memory with a hidden command ‘report_all’
+-	Added functionality: ‘find’ can now edit a group of materials after the desired list has been generated
+o	Essentially allows for a ‘mass edit’ feature
+-	Updated menu heading

@@ -6,7 +6,7 @@
 using namespace std;
 
 //#include <materials.h>
-#include <jobs.h>
+#include <lots.h>
 #include <time.h>
 
 //reading and writing functions
@@ -32,6 +32,7 @@ void cc_history(vector <Materials>& thelist);
 void cc_report(vector <Materials>& thelist);
 void cc_recent(vector <Materials>& thelist, vector <int>& recent);
 void cc_job(vector <Materials>& thelist, vector <int>& recent, vector <Jobs>& joblist);
+void cc_lots(vector <Materials>& thelist);
 void cc_help();
 void cc_about();
 
@@ -58,7 +59,7 @@ void command_center(vector <Materials>& thelist, vector <Jobs>& joblist) {
 		check_recent(recent);
 		prep_screen("main");
 		cout << "\nChoose from one of the following commands.\n";
-		cout << "1. search\n2. find\n3. edit\n4. help\n5. save\n6. print\n7. history\n8. recent\n9. add\n10. report\n11. jobs\n12. about\n\n";
+		cout << "1. search\n2. find\n3. edit\n4. help\n5. save\n6. print\n7. history\n8. recent\n9. add\n10. report\n11. jobs\n12. lot history\n13. about\n\n";
 		cin >> command;
 		temp.clear();
 		if (command == "lookup" || command == "search") {
@@ -93,6 +94,9 @@ void command_center(vector <Materials>& thelist, vector <Jobs>& joblist) {
 		}
 		else if (command == "jobs" || command == "job") {
 			cc_job(thelist, recent, joblist);
+		}
+		else if (command == "lot" || command == "lots") {
+			cc_lots(thelist);
 		}
 		else if (command == "about") {
 			cc_about();
@@ -226,7 +230,7 @@ void write_to_file(vector <Materials>& thelist, string filename) {
 void prep_screen(string menu) {
 	system("cls");
 	cout << "+-------------------------------------+\n";
-	cout << "|       QCML INVENTORY SYSTEM V1.6    |\n";
+	cout << "|       QCML INVENTORY SYSTEM V1.7    |\n";
 	cout << "+-------------------------------------+\n\n";
 
 	if (menu == "main")
@@ -255,6 +259,8 @@ void prep_screen(string menu) {
 		cout << "~~~~~~~~~~~~~~~~~REPORTS~~~~~~~~~~~~~~~~\n\n";
 	else if (menu == "jobs")
 		cout << "~~~~~~~~~~~~~~~~JOB MENU~~~~~~~~~~~~~~~~\n\n";
+	else if (menu == "lots")
+		cout << "~~~~~~~~~~~~~~~LOT~HISTORY~~~~~~~~~~~~~~\n\n";
 	else
 		cout << "~~~~~~~~~~~~~~~COMING SOON!~~~~~~~~~~~~~\n\n";
 
@@ -791,7 +797,7 @@ void cc_find(vector <Materials>& thelist) {
 				}
 			}
 			cout << "\nThis is a list of the matching materials.\n";
-			cout << "You can generate a report of the list, narrow it down/refine it, go back, or clear/restart the search.\n";
+			cout << "You can generate a report of the list, edit the materials in it, narrow it down/refine it, go back, or clear/restart the search.\n";
 			cin >> temp;
 			if (temp == "r" || temp == "report") {
 				for (int i = 0; i < matching.size(); i++) {
@@ -800,6 +806,148 @@ void cc_find(vector <Materials>& thelist) {
 					}
 				}
 				write_as_report(targets);
+			}
+			else if (temp == "edit") {
+				cout << "Which field to edit?\n";
+				cin >> temp;
+				if (temp == "back")
+					break;
+				else if (temp == "name") {
+					while (1) {
+						cout << "Enter the new material name, less than 20 characters.\n";
+						cin >> temp;
+						if (temp.size() < 20) {
+							for (int i = 0; i < matching.size(); i++) {
+								if (matching[i] != nullptr)
+									thelist[find_index(thelist, matching[i])].set_name(temp);
+							}
+							break;
+						}
+						else
+							cout << "That name is the wrong length, please enter one less than 20 characters.\n";
+					}
+				}
+				else if (temp == "manufacturer" || temp == "manufac" || temp == "man") {
+					while (1) {
+						cout << "Enter the new manufacturer name, less than 15 characters.\n";
+						cin >> temp;
+						if (temp.size() < 15) {
+							for (int i = 0; i < matching.size(); i++) {
+								if (matching[i] != nullptr)
+									thelist[find_index(thelist, matching[i])].set_man(temp);
+							}
+							break;
+						}
+						else
+							cout << "That name is the wrong length, please enter one less than 15 characters.\n";
+					}
+				}
+				else if (temp == "date") {
+					while (1) {
+						cout << "Enter the new date, in the format MMDDYYYY. Entering 'today' will enter today's date.\n";
+						cin >> temp;
+						if (temp == "today")
+							temp = currentDate();
+						if (temp.size() == 8) {
+							for (int i = 0; i < matching.size(); i++) {
+								if (matching[i] != nullptr)
+									thelist[find_index(thelist, matching[i])].set_date(temp);
+							}
+							break;
+						}
+						else
+							cout << "That date is the wrong format, please enter one as MMDDYYYY.\n";
+					}
+				}
+				else if (temp == "owner" || temp == "own") {
+					while (1) {
+						cout << "Enter the name of the owner, less than 20 characters.\n";
+						cin >> temp;
+						if (temp.size() < 20) {
+							for (int i = 0; i < matching.size(); i++) {
+								if (matching[i] != nullptr)
+									thelist[find_index(thelist, matching[i])].set_own(temp);
+							}
+							break;
+						}
+						else
+							cout << "That name is too long, please enter one less than 20 characters.\n";
+					}
+				}
+				else if (temp == "size") {
+					while (1) {
+						cout << "Enter the size of the material's particles.\n";
+						cin >> temp;
+						if (temp.size() < 10) {
+							for (int i = 0; i < matching.size(); i++) {
+								if (matching[i] != nullptr)
+									thelist[find_index(thelist, matching[i])].set_size(temp);
+							}
+							break;
+						}
+						else
+							cout << "That number is too large, please enter the particle size.\n";
+					}
+				}
+				else if (temp == "lot") {
+					while (1) {
+						cout << "Enter the lot number, less than 10 characters.\n";
+						cin >> temp;
+						if (temp.size() < 10) {
+							for (int i = 0; i < matching.size(); i++) {
+								if (matching[i] != nullptr)
+									thelist[find_index(thelist, matching[i])].set_lot(temp);
+							}
+							break;
+						}
+						else
+							cout << "That number/code, please enter one less than 10 characters.\n";
+					}
+				}
+				else if (temp == "weight") {
+					while (1) {
+						cout << "Enter the remaining weight of the material, in kg, less than 10 significant digits.\n";
+						cin >> temp;
+						if (temp.size() < 10) {
+							for (int i = 0; i < matching.size(); i++) {
+								if (matching[i] != nullptr)
+									thelist[find_index(thelist, matching[i])].set_weight(temp);
+							}
+							break;
+						}
+						else
+							cout << "That number is too precise, enter a number with less than 10 significant digits.\n";
+					}
+				}
+				else if (temp == "open") {
+					cout << "The packaging is now labeled as 'open'.\n";
+					for (int i = 0; i < matching.size(); i++) {
+						if (matching[i] != nullptr)
+							thelist[find_index(thelist, matching[i])].set_open("1");
+					}
+				}
+				else if (temp == "closed") {
+					cout << "The packaging is now labeled as 'closed'.\n";
+					for (int i = 0; i < matching.size(); i++) {
+						if (matching[i] != nullptr)
+							thelist[find_index(thelist, matching[i])].set_open("0");
+					}
+				}
+				else if (temp == "ID") {
+					while (1) {
+						cout << "Enter the job ID of the material, less than 10 characters.\n";
+						cin >> temp;
+						if (temp.size() < 10) {
+							for (int i = 0; i < matching.size(); i++) {
+								if (matching[i] != nullptr)
+									thelist[find_index(thelist, matching[i])].set_ID(temp);
+							}
+							break;
+						}
+						else
+							cout << "That ID is too long, please enter one less than 10 characters.\n";
+					}
+				}
 			}
 			else if (temp == "narrow" || temp == "refine") {
 				continue;
@@ -1442,6 +1590,54 @@ void cc_job(vector <Materials>& thelist, vector <int>& recent, vector <Jobs>& jo
 						joblist[jindex].finish();
 					}
 				}
+			}
+		}
+	}
+}
+
+void cc_lots(vector <Materials> &thelist) {
+	vector <Lots> lotlist;
+	vector <Materials> usedlots;
+	string temp;
+	Lots templot;
+	bool used;
+	prep_screen("lots");
+	while (temp != "back") {
+		cout << "Please enter the lot# or barcode of the material whose lot history you would like to generate.\n";
+		cin >> temp;
+		if (temp == "report_all") {
+			for (int i = 0; i < thelist.size(); i++) {
+				used = false;
+				for (int j = 0; j < usedlots.size(); j++) {
+					if (usedlots[j].get_lot() == thelist[i].get_lot())
+						used = true;
+				}
+				if (!used)
+					usedlots.push_back(thelist[i]);
+			}
+			string filename = currentDate();
+			filename.append("_lot_report.txt");
+			ofstream writefile(filename);
+			if (!writefile.is_open()) {
+				cout << "There was a problem writing the file.\n";
+				continue;
+			}
+			for (int i = 0; i < usedlots.size(); i++) {
+				templot.build(usedlots[i], thelist);
+				templot.write(writefile);
+			}
+			cout << "Report written.\n\n";
+		}
+		for (int i = 0; i < thelist.size(); i++) {
+			if (thelist[i].get_lot() == temp) {
+				templot.build(thelist[i], thelist);
+				templot.print();
+				break;
+			}
+			else if (thelist[i].get_code() == temp) {
+				templot.build(thelist[i], thelist);
+				templot.print();
+				break;
 			}
 		}
 	}
