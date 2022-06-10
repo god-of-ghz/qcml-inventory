@@ -2,6 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <cstring>
 using namespace std;
 
 #include <materials.h>
@@ -11,6 +12,8 @@ vector <Materials> file_to_vec(ifstream& reading);
 void read_history(vector <Materials>& thelist);
 void write_to_file(vector <Materials>& thelist, string filename);
 void write_history(vector <Materials>& thelist);
+void write_ireport(vector <Materials>& thelist);
+void write_hreport(vector <Materials>& thelist);
 
 Materials process_material(string * info_set);
 Materials * search_material(vector <Materials>& thelist, string a);
@@ -23,13 +26,15 @@ void experiment(vector <Materials>& thelist);
 
 void prep_screen(string menu);
 
-void check_recent(vector <Materials*>& recent);
+void check_recent(vector <int>& recent);
+//void add_recent(vector <int>& recent, Materials * target);
+void add_recent(vector <int>& recent, int index);
 
 void command_center(vector <Materials>& thelist) {
 	string command;
 	string temp;
 	Materials * target = nullptr;
-	vector <Materials*> recent;
+	vector <int> recent;
 	vector <Materials*> matching;
 	Materials temp_mat;
 	string * info_set;
@@ -50,7 +55,6 @@ void command_center(vector <Materials>& thelist) {
 						cout << "The material was not found, please try again.\n";
 						continue;
 					}
-					recent.push_back(target);
 					Materials(*target).print_me();
 				}
 			}
@@ -158,10 +162,12 @@ void command_center(vector <Materials>& thelist) {
 					continue;
 				}
 				index = find_index(thelist, target);
-				recent.push_back(target);
+				add_recent(recent, index);
 				cout << "Which field to edit?\n";
 				cin >> temp;
-				if (temp == "code" || temp == "barcode") {
+				if (temp == "back")
+					break;
+				else if (temp == "code" || temp == "barcode") {
 					while (1) {
 						cout << "Enter the new barcode, please no more than 9 digits or less than 3.\n";
 						cout << "The current value for this field is: " << thelist[index].get_code() << endl;
@@ -179,8 +185,6 @@ void command_center(vector <Materials>& thelist) {
 							cout << "That barcode is the wrong length, please enter one between 9 and 3 digits.\n";
 					}
 				}
-				else if (temp == "back")
-					break;
 				else if (temp == "name") {
 					while (1) {
 						cout << "Enter the new material name, less than 20 characters.\n";
@@ -300,6 +304,16 @@ void command_center(vector <Materials>& thelist) {
 						target = search_material(thelist, temp);
 						if (target != nullptr) {
 							thelist[index] = Materials(*target);
+							while (1) {
+								cout << "Enter the remaining weight of the material, in kg, less than 10 significant digits.\n";
+								cin >> temp;
+								if (temp.size() < 10) {
+									break;
+								}
+								else
+									cout << "That number is too precise, enter a number with less than 10 significant digits.\n";
+							}
+							thelist[index].set_weight(temp);
 							break;
 						}
 						else
@@ -374,15 +388,15 @@ void command_center(vector <Materials>& thelist) {
 		}
 		else if (command == "recent") {
 			prep_screen("recent");
-			cout << "This feature has been disabled due to a bug.\nIt will be re-added in a future release.\n";
-			/*for (int i = 0; i < recent.size(); i++) {
-				Materials(*recent[i]).print_table();
-			}*/
+			for (int i = 0; i < recent.size(); i++) {
+				thelist[recent[i]].print_table();
+			}
 			cout << "\nHit any key to leave this menu.\n";
 			cin >> temp;
 		}
 		else if (command == "add") {
 			prep_screen("adding");
+			temp_mat.clear();
 			while (temp != "back") {
 				while (1) {
 					cout << "\nPlease enter the barcode for the new material/package.\n";
@@ -410,15 +424,26 @@ void command_center(vector <Materials>& thelist) {
 								cout << "That material was not found, please try again.\n";
 								continue;
 							}
-							recent.push_back(target);
 							temp_mat = *target;
 							temp_mat.clear_history();
+							while (1) {
+								cout << "Enter the remaining weight of the material, in kg, less than 10 significant digits.\n";
+								cin >> temp;
+								if (temp.size() < 10) {
+									break;
+								}
+								else
+									cout << "That number is too precise, enter a number with less than 10 significant digits.\n";
+							}
+							temp_mat.set_weight(temp);
 							temp_mat.add_history(temp_mat.get_weight(), currentDate());
 							thelist.push_back(temp_mat);
+							add_recent(recent, thelist.size() - 1);
 							break;
 						}
 					}
-					else {
+					else if (temp == "back") {}
+					else if (temp == "n" || temp == "no") {
 						info_set = new string[10];
 						info_set[0] = temp_mat.get_code();
 						while (1) {
@@ -517,8 +542,33 @@ void command_center(vector <Materials>& thelist) {
 						}
 						thelist.push_back(process_material(info_set));
 						thelist[thelist.size() - 1].add_history(info_set[7], currentDate());
+						add_recent(recent, thelist.size() - 1);
 						delete[] info_set;
 					}
+				}
+			}
+		}
+		else if (command == "report") {
+			prep_screen("report");
+			cout << "Would you like to generate a report?\n";
+			cin >> temp;
+			if (temp == "y" || temp == "yes") {
+				while (temp != "back") {
+					cout << "What kind of report would you like? Please choose from 'history' or 'inventory' or type 'back' to go back.\n";
+					cin >> temp;
+					if (temp == "i" || temp == "inventory") {
+						write_ireport(thelist);
+					}
+					else if (temp == "h" || temp == "history") {
+						write_hreport(thelist);
+					}
+					else if (temp == "back")
+						break;
+					else {
+						cout << "That is not a valid report, please choose from the given options.\n";
+						continue;
+					}
+					prep_screen("report");
 				}
 			}
 		}
@@ -627,23 +677,23 @@ void write_to_file(vector <Materials>& thelist, string filename) {
 	cout << "Writing the database! DO NOT CLOSE THE PROGRAM!\n";
 	for (int i = 0; i < thelist.size(); i++) {
 		buildline.append(thelist[i].get_code());
-		buildline.append("	");
+		buildline.append(return_spaces(thelist[i].get_code(), 10));
 		buildline.append(thelist[i].get_name());
-		buildline.append("	");
+		buildline.append(return_spaces(thelist[i].get_name(), 20));
 		buildline.append(thelist[i].get_man());
-		buildline.append("	");
+		buildline.append(return_spaces(thelist[i].get_man(), 15));
 		buildline.append(thelist[i].get_date());
-		buildline.append("	");
+		buildline.append(return_spaces(thelist[i].get_date(), 15));
 		buildline.append(thelist[i].get_own());
-		buildline.append("	");
+		buildline.append(return_spaces(thelist[i].get_own(), 20));
 		buildline.append(thelist[i].get_size());
-		buildline.append("	");
+		buildline.append(return_spaces(thelist[i].get_size(), 10));
 		buildline.append(thelist[i].get_lot());
-		buildline.append("	");
+		buildline.append(return_spaces(thelist[i].get_lot(), 10));
 		buildline.append(thelist[i].get_weight());
-		buildline.append("	");
+		buildline.append(return_spaces(thelist[i].get_weight(), 10));
 		buildline.append(thelist[i].get_open());
-		buildline.append("	");
+		buildline.append(return_spaces(thelist[i].get_open(), 5));
 		buildline.append(thelist[i].get_ID());
 		writefile << buildline << endl;
 		buildline.clear();
@@ -654,7 +704,7 @@ void write_to_file(vector <Materials>& thelist, string filename) {
 void prep_screen(string menu) {
 	system("cls");
 	cout << "+-------------------------------------+\n";
-	cout << "|       QCML INVENTORY SYSTEM V1.3    |\n";
+	cout << "|       QCML INVENTORY SYSTEM V1.4    |\n";
 	cout << "+-------------------------------------+\n\n";
 
 	if (menu == "main")
@@ -670,7 +720,7 @@ void prep_screen(string menu) {
 	else if (menu == "listing")
 		cout << "~~~~~~~~~~~~~~INVENTORY LIST~~~~~~~~~~~~\n\n";
 	else if (menu == "recent")
-		cout << "~~~~~~~~~~~~~RECENTLY ACCESSED~~~~~~~~~~\n\n";
+		cout << "~~~~~~~~~~~~~RECENTLY EDITED~~~~~~~~~~~~\n\n";
 	else if (menu == "editing")
 		cout << "~~~~~~~~~~~~~EDIT MODE ENABLED~~~~~~~~~~\n\n";
 	else if (menu == "adding")
@@ -679,11 +729,13 @@ void prep_screen(string menu) {
 		cout << "~~~~~~~~~~~~~~~~~~ABOUT~~~~~~~~~~~~~~~~~\n\n";
 	else if (menu == "history")
 		cout << "~~~~~~~~~~~~~~~~~HISTORY~~~~~~~~~~~~~~~~\n\n";
+	else if (menu == "report")
+		cout << "~~~~~~~~~~~~~~~~~REPORTS~~~~~~~~~~~~~~~~\n\n";
 	else
 		cout << "~~~~~~~~~~~~~~~COMING SOON!~~~~~~~~~~~~~\n\n";
 
 	if (menu == "listing" || menu == "recent") {
-		cout << "BARCODE    MATERIAL             MANUFACTURER    DATE            OWNER                SIZE       LOT        WEIGHT(kg) OPEN  ID        \n";
+		cout << "BARCODE    MATERIAL             MANUFACTURER    DATE            OWNER                SIZE(um)   LOT        WEIGHT(kg) OPEN  ID        \n";
 		cout << "--------------------------------------------------------------------------------------------------------------------------------------\n";
 	}
 	else if (menu == "history") {
@@ -712,9 +764,13 @@ int find_index(vector <Materials>& thelist, string a) {
 	}
 }
 
-void check_recent(vector <Materials*>& recent) {
-	if (recent.size() > 1000)
+void check_recent(vector <int>& recent) {
+	if (recent.size() > 100)
 		recent.clear();
+}
+
+void add_recent(vector <int>& recent, int index) {
+	recent.push_back(index);
 }
 
 void read_history(vector <Materials>& thelist) {
@@ -759,6 +815,80 @@ void write_history(vector <Materials>& thelist) {
 		}
 	}
 	writefile.close();
+}
+
+void write_ireport(vector <Materials>& thelist) {
+	string filename;
+	filename.append(currentDate());
+	filename.append("_inventory_report.txt");
+	ofstream writefile(filename);
+	if (!writefile.good()) {
+		cout << "There was a problem writing the file.\n";
+		return;
+	}
+	writefile << "BARCODE    MATERIAL             MANUFACTURER    DATE            OWNER                SIZE(um)   LOT        WEIGHT(kg) OPEN  ID       \n";
+	writefile << "-------------------------------------------------------------------------------------------------------------------------------------\n";
+	string buildline;
+	cout << "Writing your report! DO NOT CLOSE THE PROGRAM!\n";
+	for (int i = 0; i < thelist.size(); i++) {
+		buildline.append(thelist[i].get_code());
+		buildline.append(return_spaces(thelist[i].get_code(), 10));
+		buildline.append(thelist[i].get_name());
+		buildline.append(return_spaces(thelist[i].get_name(), 20));
+		buildline.append(thelist[i].get_man());
+		buildline.append(return_spaces(thelist[i].get_man(), 15));
+		buildline.append(thelist[i].get_date());
+		buildline.append(return_spaces(thelist[i].get_date(), 15));
+		buildline.append(thelist[i].get_own());
+		buildline.append(return_spaces(thelist[i].get_own(), 20));
+		buildline.append(thelist[i].get_size());
+		buildline.append(return_spaces(thelist[i].get_size(), 10));
+		buildline.append(thelist[i].get_lot());
+		buildline.append(return_spaces(thelist[i].get_lot(), 10));
+		buildline.append(thelist[i].get_weight());
+		buildline.append(return_spaces(thelist[i].get_weight(), 10));
+		buildline.append(thelist[i].get_open());
+		buildline.append(return_spaces(thelist[i].get_open(), 5));
+		buildline.append(thelist[i].get_ID());
+		writefile << buildline << endl;
+		buildline.clear();
+	}
+	writefile.close();
+	string tempcommand = "START WINWORD.exe ";
+	tempcommand.append(filename);
+	const char * command = tempcommand.c_str();
+	system(command);
+}
+
+void write_hreport(vector <Materials>& thelist) {
+	string filename;
+	filename.append(currentDate());
+	filename.append("_history_report.txt");
+	ofstream writefile(filename);
+	if (!writefile.good()) {
+		cout << "There was a problem writing the file.\n";
+		return;
+	}
+	writefile << "BARCODE    WEIGHT(kg) DATE           \n";
+	writefile << "-------------------------------------\n";
+	string buildline;
+	cout << "Writing your report! DO NOT CLOSE THE PROGRAM!\n";
+	for (int i = 0; i < thelist.size(); i++) {
+		for (int j = 0; j < thelist[i].h_size(); j++) {
+			buildline.append(thelist[i].get_code());
+			buildline.append(return_spaces(thelist[i].get_code(), 10));
+			buildline.append(thelist[i].get_whist(j));
+			buildline.append(return_spaces(thelist[i].get_whist(j), 10));
+			buildline.append(thelist[i].get_dhist(j));
+			writefile << buildline << endl;
+			buildline.clear();
+		}
+	}
+	writefile.close();
+	string tempcommand = "START WINWORD.exe ";
+	tempcommand.append(filename);
+	const char * command = tempcommand.c_str();
+	system(command);
 }
 
 void experiment(vector <Materials>& thelist) {

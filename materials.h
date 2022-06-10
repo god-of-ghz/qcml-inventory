@@ -7,6 +7,7 @@ using namespace std;
 #include <time.h>
 
 void calc_spaces(string target, int num);
+string return_spaces(string target, int num);
 const string currentDate();
 
 class Materials{
@@ -114,7 +115,7 @@ void Materials::clear() {
 }
 
 void Materials::operator= (const Materials& target) {
-	set_info(code, target.get_name(), target.get_man(), target.get_date(), target.get_own(), target.get_size(), target.get_lot(), target.get_weight(), target.get_open(), target.get_ID());
+	set_info(code, target.get_name(), target.get_man(), target.get_date(), target.get_own(), target.get_size(), target.get_lot(), weight, target.get_open(), target.get_ID());
 }
 
 void Materials::print_me() const {
@@ -166,13 +167,6 @@ void Materials::print_history() const {
 	}
 }
 
-void calc_spaces(string target, int num) {
-	for (int i = target.size(); i <= num; i++) {
-		cout << " ";
-	}
-}
-
-
 bool Materials::isopen() const {
 	if (open == "1")
 		return true;
@@ -209,6 +203,18 @@ void Materials::clear_history() {
 		history[1].clear();
 	}
 	history.clear();
+}
+
+void calc_spaces(string target, int num) {
+	cout << return_spaces(target, num);
+}
+
+string return_spaces(string target, int num) {
+	string spaces;
+	for (int i = target.size(); i <= num; i++) {
+		spaces.append(" ");
+	}
+	return spaces;
 }
 
 const string currentDate() {
