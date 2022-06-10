@@ -152,3 +152,19 @@ o	Improved performance
 -	Update ‘edit’ function
 o	Will now show you the current value of the field you are about to change
 
+V1.3 8/1/2014
+-	Bug fixes:
+o	Fixed ‘add’ to correctly initialize the history for new entries
+o	Fixed a bug where the program would add extra entry at the end when reading in history data
+o	Fixed a bug where current weight of all previously cloned materials would also be added to the history of a new material being added and cloned
+-	Updated menu heading
+-	Changed units to ‘kg’ instead of ‘lbs’
+-	Known bugs:
+o	When a new material is added and it is copied from another, the weight is copied as well, creating a single entry of a false history
+
+V1.4 8/18/2014
+-	New function!
+o	‘report’
+o	Asks the user if he or she would like to generate a report and of what
+o	Writes that data to a .txt file and opens it in Microsoft Office Word for printing
+-	Functional change: when the properties of one material are copied to another, weight will not be included
