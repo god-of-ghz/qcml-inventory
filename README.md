@@ -222,3 +222,47 @@ o	Lot histories are not saved and are rebuilt each time one is desired
 -	Added functionality: ‘find’ can now edit a group of materials after the desired list has been generated
 o	Essentially allows for a ‘mass edit’ feature
 -	Updated menu heading
+
+ V1.8 1/7/2015
+-	New function! ‘usage’ or ‘monthly’ provides a powder usage history for the current month
+o	User enters ‘usage’ at the main menu and usage is automatically calculated and exported as a report, similar to ‘lot history’
+o	Currently only works for the current, cannot be done for a month in the past
+-	Changed the ‘recent’ function to only clear if 500 entries are made
+-	Added functionality: editing a group of materials in ‘find’ will now add them to ‘recent’
+-	Added functionality: listing results in ‘find’ also gives the total weight without having to write a report every time
+-	Added functionality: searching for materials in ‘find’ will automatically search for partial matches if no complete matches are found
+o	Partial matches are only searched for during new searches
+o	Refining a search will not seek partial matches
+o	A partial match is one where the user input is found as fragment of the actual term, or vice versa.
+o	Eg. Searching for ‘steel’ would return partial matches for ‘stainless_steel’ ‘maraging_steel’ and ‘chrome_steel’
+o	Eg. Searching for ‘nickel_iron’ would return partial matches for ‘nickel’ and ‘iron,’ but NOT ‘nickel_steel’ or ‘nickel_chrome’
+o	One of the terms must appear COMPLETELY in the other to return match
+-	Updated help menu
+-	Updated menu heading
+-	Re-enabled hidden experimental function, used for debugging only
+o	Accessed via command ‘beta’
+-	Bug fixes:
+o	Whenever a date is entered by the user, the program will thoroughly check to be sure it is a valid date in the proper format
+o	The program will not incorrectly add a material to ‘recent’ if the edit never went through
+V1.8.1 2/6/2015
+-	‘search’ now displays its results in a neater table format
+-	Fixed a bug where inventorying a new item and using it in the same month would report no usage
+V1.8.2 2/17/2015
+-	Updated menu heading
+-	Added functionality: ‘monthly usage’ now prints out the report on the screen as well as writing it to the file
+-	Added functionality: ‘recent’ now gives a preview of the total weight, instead of having the print the report to see it
+-	Added functionality: ‘monthly usage’ now tallies up power gained and powder lost in the monthly report, instead of giving just net usage
+-	Added functionality: whenever a number is entered for a weight, the program checks to ensure it is an actual number before continuing, preventing commands or nonsensical entries accidentally being entered as weights
+-	Writing any report now puts the written text report in a folder called ‘reports,’ instead of putting them directly in the program’s files
+V1.8.3 3/4/2015
+-	Added functionality: ‘search’ now also adds up the total weight of the powder containers being scanned
+o	Now only prompts the user to enter a barcode once at the start, instead of each time.
+-	Updated menu heading
+
+V1.8.4 4/16/2015
+-	When a contained of powder is edited for weight (meaning the weight has changed) the program will now also automatically mark it as being opened
+-	Added a hidden command at the main menu “fix_all”
+o	Runs through the list of powder in inventory
+o	Any entry with more than 1 instance of history (i.e the weight has ever changed) will be set to ‘1’ or be marked as opened
+o	Displays the number of entries changed
+-	Updated menu heading

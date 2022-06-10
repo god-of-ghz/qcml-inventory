@@ -23,7 +23,7 @@ void write_as_report(vector <Materials>& targets);
 
 //command center functions
 void cc_search(vector <Materials>& thelist);
-void cc_find(vector <Materials>& thelist);
+void cc_find(vector <Materials>& thelist, vector <int>& recent);
 void cc_edit(vector <Materials>& thelist, vector <int>& recent);
 void cc_add(vector <Materials>& thelist, vector <int>& recent);
 void cc_save(vector <Materials>& thelist, vector <Jobs>& joblist);
@@ -33,10 +33,12 @@ void cc_report(vector <Materials>& thelist);
 void cc_recent(vector <Materials>& thelist, vector <int>& recent);
 void cc_job(vector <Materials>& thelist, vector <int>& recent, vector <Jobs>& joblist);
 void cc_lots(vector <Materials>& thelist);
+void cc_usage(vector <Materials>& thelist);
 void cc_help();
 void cc_about();
+void cc_experimental();
 
-//searching/processing functions
+//helper functions
 Materials process_material(string * info_set);
 Materials * search_material(vector <Materials>& thelist, string a);
 int find_index(vector <Materials>& thelist, Materials * target);
@@ -48,8 +50,11 @@ const string currentDate();
 void prep_screen(string menu);
 
 void check_recent(vector <int>& recent);
-//void add_recent(vector <int>& recent, Materials * target);
 void add_recent(vector <int>& recent, int index);
+
+bool is_valid_date(string a);
+bool is_number(string a);
+bool partial_match(string a, string b);		//check if b can be found as a portion of a
 
 void command_center(vector <Materials>& thelist, vector <Jobs>& joblist) {
 	string command;
@@ -59,54 +64,73 @@ void command_center(vector <Materials>& thelist, vector <Jobs>& joblist) {
 		check_recent(recent);
 		prep_screen("main");
 		cout << "\nChoose from one of the following commands.\n";
-		cout << "1. search\n2. find\n3. edit\n4. help\n5. save\n6. print\n7. history\n8. recent\n9. add\n10. report\n11. jobs\n12. lot history\n13. about\n\n";
+		cout << "1. search\n2. find\n3. edit\n4. help\n5. save\n6. print\n7. history\n8. recent\n9. add\n10. report\n11. jobs\n12. lot history\n13. monthly usage\n14. exit\n15. about\n\n";
 		cin >> command;
 		temp.clear();
-		if (command == "lookup" || command == "search") {
+		if (command == "lookup" || command == "search" || command == "1") {
 			cc_search(thelist);
 		}
-		else if (command == "find") {
-			cc_find(thelist);
+		else if (command == "find" || command == "2") {
+			cc_find(thelist, recent);
 		}
-		else if (command == "edit") {
+		else if (command == "edit" || command == "3") {
 			cc_edit(thelist, recent);
 		}
-		else if (command == "help") {
+		else if (command == "help" || command == "4") {
 			cc_help();
 		}
-		else if (command == "save") {
+		else if (command == "save" || command == "5") {
 			cc_save(thelist, joblist);
 		}
-		else if (command == "print" || command == "list") {
+		else if (command == "print" || command == "list" || command == "6") {
 			cc_print(thelist);
 		}
-		else if (command == "history") {
+		else if (command == "history" || command == "7") {
 			cc_history(thelist);
 		}
-		else if (command == "recent") {
+		else if (command == "recent" || command == "8") {
 			cc_recent(thelist, recent);
 		}
-		else if (command == "add") {
+		else if (command == "add" || command == "9") {
 			cc_add(thelist, recent);
 		}
-		else if (command == "reports" || command == "report") {
+		else if (command == "reports" || command == "report" || command == "10") {
 			cc_report(thelist);
 		}
-		else if (command == "jobs" || command == "job") {
+		else if (command == "jobs" || command == "job" || command == "11") {
 			cc_job(thelist, recent, joblist);
 		}
-		else if (command == "lot" || command == "lots") {
+		else if (command == "lot" || command == "lots" || command == "12") {
 			cc_lots(thelist);
 		}
-		else if (command == "about") {
+		else if (command == "usage" || command == "monthly" || command == "13") {
+			cc_usage(thelist);
+		}
+		else if (command == "about" || command == "15") {
 			cc_about();
 		}
-		else if (command == "exit" || command == "back") {
+		else if (command == "beta") {
+			cc_experimental();
+		}
+		else if (command == "exit" || command == "back" || command == "14") {
 			prep_screen("exiting");
 			cout << "Are you sure you want to exit the program?\n";
 			cin >> temp;
 			if (temp == "yes" || temp == "y")
 				break;
+		}
+		else if (command == "fix_all") {
+			int sum = 0;
+			for (int i = 0; i < thelist.size(); i++) {
+				if (thelist[i].get_hist().size() > 1) {
+					if (!stoi(thelist[i].get_open()))
+						sum++;
+					thelist[i].set_open("1");
+					
+				}
+			}
+			cout << sum << " entries changed.\n";
+			system("pause");
 		}
 		else {
 			prep_screen("main");
@@ -229,9 +253,9 @@ void write_to_file(vector <Materials>& thelist, string filename) {
 
 void prep_screen(string menu) {
 	system("cls");
-	cout << "+-------------------------------------+\n";
-	cout << "|       QCML INVENTORY SYSTEM V1.7    |\n";
-	cout << "+-------------------------------------+\n\n";
+	cout << "+---------------------------------------+\n";
+	cout << "|       QCML INVENTORY SYSTEM V1.8.4    |\n";
+	cout << "+---------------------------------------+\n\n";
 
 	if (menu == "main")
 		cout << "~~~~~~~~~~~~~~~~MAIN MENU~~~~~~~~~~~~~~~\n\n";
@@ -260,11 +284,15 @@ void prep_screen(string menu) {
 	else if (menu == "jobs")
 		cout << "~~~~~~~~~~~~~~~~JOB MENU~~~~~~~~~~~~~~~~\n\n";
 	else if (menu == "lots")
-		cout << "~~~~~~~~~~~~~~~LOT~HISTORY~~~~~~~~~~~~~~\n\n";
+		cout << "~~~~~~~~~~~~~~~LOT HISTORY~~~~~~~~~~~~~~\n\n";
+	else if (menu == "usage")
+		cout << "~~~~~~~~~~~~~~MONTHLY USAGE~~~~~~~~~~~~~\n\n";
+	else if (menu == "beta")
+		cout << "~~~~~~~~~~~~~~~CLASSIFIED~~~~~~~~~~~~~~~\n\n";
 	else
 		cout << "~~~~~~~~~~~~~~~COMING SOON!~~~~~~~~~~~~~\n\n";
 
-	if (menu == "listing" || menu == "recent") {
+	if (menu == "listing" || menu == "recent" || menu == "searching") {
 		cout << "BARCODE    MATERIAL             MANUFACTURER    DATE            OWNER                SIZE(um)   LOT        WEIGHT(kg) OPEN  ID        \n";
 		cout << "--------------------------------------------------------------------------------------------------------------------------------------\n";
 	}
@@ -305,12 +333,152 @@ int find_index(vector <Jobs>& joblist, string ID) {
 }
 
 void check_recent(vector <int>& recent) {
-	if (recent.size() > 100)
+	if (recent.size() > 500)
 		recent.clear();
 }
 
 void add_recent(vector <int>& recent, int index) {
 	recent.push_back(index);
+}
+
+bool is_valid_date(string a) {
+	string num = "0123456789";
+	string month; month.append(a, 0, 2);
+	string day; day.append(a, 2, 2);
+	string year; year.append(a, 4, 4);
+	//check ????????
+	if (a == "????????")
+		return true;
+	//check size
+	if (a.size() != 8)
+		return false;
+	//check that they're actually numbers
+	try {
+		stoi(month);
+	}
+	catch (invalid_argument ia) {
+		return false;
+	}
+	try {
+		stoi(day);
+	}
+	catch (invalid_argument ia) {
+		return false;
+	}
+	try {
+		stoi(year);
+	}
+	catch (invalid_argument ia) {
+		return false;
+	}
+	//check valid month
+	if (stoi(month) < 1 || stoi(month) > 12)
+		return false;
+	//check to make sure its not in the future
+	if (process_date1(a) > process_date1(currentDate()))
+		return false;
+	//check sure its a reasonable year
+	if (stoi(year) < 2009)
+		return false;
+	//check to see if its a valid day for each month (i.e, can't have 35th of May, or 31st of February)
+	if (a[0] == num[0]) {
+		if (a[1] == num[1] || a[1] == num[3] || a[1] == num[5] || a[1] == num[7] || a[1] == num[8]) {		//Jan, March, May, July, August have 31 days
+			if (stoi(day) > 31)
+				return false;
+		}
+		else if (a[1] == num[4] || a[1] == num[6] || a[1] == num[9]) {						//April, June, September have 30 days
+			if (stoi(day) > 30)
+				return false;
+		}
+		else if (a[1] == num[2]) {							//February has 28 days, but 29 on a leap year
+			if (stoi(year) % 4 == 0) {
+				if (stoi(day) > 29)
+					return false;
+			}
+			else {
+				if (stoi(day) > 28)
+					return false;
+			}
+		}
+	}
+	else if (a[0] == num[1]) {																				
+		if (a[0] == num[0] || a[0] == num[2]) {				//October and December have 31 days									
+			if (stoi(day) > 31)
+				return false;
+		}
+		else if (a[0] == num[1]) {							//November has 30 days
+			if (stoi(day) > 30)
+				return false;
+		}
+	}
+	return true;
+}
+
+bool is_number(string a) {
+	bool decimal_used = false;			// did we use up the decimal point? if so, can't use another
+	try {
+		stod(a);
+	}
+	catch (invalid_argument ia) {		// make sure its not a weird string or something
+		return false;
+	}
+	for (int i = 0; i < a.size(); i++) {
+		if (a[i] == 45 || a[i] == 46 || (a[i] <= 57 && a[i] >= 48)) {}		// check to see that every character is either a decimal point, a negative sign or a number
+		else
+			return false;
+		if (a[i] == 45 && i != 0)		// make sure the negative sign is up front, not in the middle somewhere
+			return false;
+		if (a[i] == 46 && !decimal_used)
+			decimal_used = true;
+		else if (a[i] == 46 && decimal_used)	// if we get a decimal point, but have already used one, its wrong
+			return false;
+	}
+	return true;
+}
+
+bool partial_match(string a, string b) {
+	bool match = false;
+	if (a.size() > b.size()) {
+		for (int i = 0; i < a.size(); i++) {
+			for (int j = 0; j < b.size(); j++) {
+				if (i + j < a.size()) {					// make sure we dont exceed the outer loop's limits
+					if (a[i + j] == b[j]) {
+						match = true;
+					}
+					else {
+						match = false;
+						break;
+					}
+				}
+				else
+					match = false;
+			}
+			if (match)									// to make sure the function ends after its done finding the match
+				return match;
+		}
+	}
+	else if (b.size() > a.size()) {
+		for (int i = 0; i < b.size(); i++) {
+			for (int j = 0; j < a.size(); j++) {
+				if (i + j < b.size()) {					// make sure we dont exceed the outer loop's limits
+					if (b[i + j] == a[j]) {
+						match = true;
+					}
+					else {
+						match = false;
+						break;
+					}
+				}
+				else
+					match = false;
+			}
+			if (match)
+				return match;
+		}
+	}
+	else if (a.size() == b.size())
+		return (a == b);
+	return match;
 }
 
 void read_history(vector <Materials>& thelist) {
@@ -358,7 +526,7 @@ void write_history(vector <Materials>& thelist) {
 }
 
 void write_ireport(vector <Materials>& thelist) {
-	string filename;
+	string filename = "reports/";
 	filename.append(currentDate());
 	filename.append("_inventory_report.txt");
 	ofstream writefile(filename);
@@ -401,8 +569,8 @@ void write_ireport(vector <Materials>& thelist) {
 }
 
 void write_as_report(vector <Materials>& targets) {
-	string filename;
 	double total = 0;
+	string filename = "reports/";
 	filename.append(currentDate());
 	filename.append("_custom_report.txt");
 	ofstream writefile(filename);
@@ -448,7 +616,7 @@ void write_as_report(vector <Materials>& targets) {
 }
 
 void write_hreport(vector <Materials>& thelist) {
-	string filename;
+	string filename = "reports/";
 	filename.append(currentDate());
 	filename.append("_history_report.txt");
 	ofstream writefile(filename);
@@ -595,8 +763,9 @@ void cc_search(vector <Materials>& thelist) {
 	prep_screen("searching");
 	string temp;
 	Materials * target = nullptr;
+	double runsum = 0;
+	cout << "\nEnter the barcode for the material or type 'back' to go back. \n";
 	while (temp != "back") {
-		cout << "\nEnter the barcode for the material or type 'back' to go back. \n";
 		cin >> temp;
 		if (temp != "back") {
 			target = search_material(thelist, temp);
@@ -604,19 +773,24 @@ void cc_search(vector <Materials>& thelist) {
 				cout << "The material was not found, please try again.\n";
 				continue;
 			}
-			Materials(*target).print_me();
+			Materials(*target).print_table();
+			runsum += stod(Materials(*target).get_weight());
+			cout << "Total weight: " << runsum << "kg\n\n";
 		}
 	}
 	return;
 }
 
-void cc_find(vector <Materials>& thelist) {
+void cc_find(vector <Materials>& thelist, vector <int> &recent) {
 	prep_screen("searching");
 	string temp;
 	Materials * target = nullptr;
 	vector <Materials*> matching;
 	vector <Materials> targets;
+	double runsum = 0;
+	bool partial;
 	while (temp != "back") {
+		partial = false;
 		cout << "\nEnter the field to search by or type 'back' to go back.\n";
 		cin >> temp;
 		if (temp == "name") {
@@ -636,6 +810,15 @@ void cc_find(vector <Materials>& thelist) {
 					if (thelist[i].get_name() == temp) {
 						target = &thelist[i];
 						matching.push_back(target);
+					}
+				}
+				if (matching.size() == 0) {
+					partial = true;
+					for (int i = 0; i < thelist.size(); i++) {
+						if (partial_match(thelist[i].get_name(), temp)) {
+							target = &thelist[i];
+							matching.push_back(target);
+						}
 					}
 				}
 			}
@@ -659,6 +842,15 @@ void cc_find(vector <Materials>& thelist) {
 						matching.push_back(target);
 					}
 				}
+				if (matching.size() == 0) {
+					partial = true;
+					for (int i = 0; i < thelist.size(); i++) {
+						if (partial_match(thelist[i].get_man(), temp)) {
+							target = &thelist[i];
+							matching.push_back(target);
+						}
+					}
+				}
 			}
 		}
 		else if (temp == "owner") {
@@ -678,6 +870,15 @@ void cc_find(vector <Materials>& thelist) {
 					if (thelist[i].get_own() == temp) {
 						target = &thelist[i];
 						matching.push_back(target);
+					}
+				}
+				if (matching.size() == 0) {
+					partial = true;
+					for (int i = 0; i < thelist.size(); i++) {
+						if (partial_match(thelist[i].get_own(), temp)) {
+							target = &thelist[i];
+							matching.push_back(target);
+						}
 					}
 				}
 			}
@@ -703,6 +904,15 @@ void cc_find(vector <Materials>& thelist) {
 						matching.push_back(target);
 					}
 				}
+				if (matching.size() == 0) {
+					partial = true;
+					for (int i = 0; i < thelist.size(); i++) {
+						if (partial_match(thelist[i].get_date(), temp)) {
+							target = &thelist[i];
+							matching.push_back(target);
+						}
+					}
+				}
 			}
 		}
 		else if (temp == "size") {
@@ -722,6 +932,15 @@ void cc_find(vector <Materials>& thelist) {
 					if (thelist[i].get_size() == temp) {
 						target = &thelist[i];
 						matching.push_back(target);
+					}
+				}
+				if (matching.size() == 0) {
+					partial = true;
+					for (int i = 0; i < thelist.size(); i++) {
+						if (partial_match(thelist[i].get_size(), temp)) {
+							target = &thelist[i];
+							matching.push_back(target);
+						}
 					}
 				}
 			}
@@ -745,6 +964,15 @@ void cc_find(vector <Materials>& thelist) {
 						matching.push_back(target);
 					}
 				}
+				if (matching.size() == 0) {
+					partial = true;
+					for (int i = 0; i < thelist.size(); i++) {
+						if (partial_match(thelist[i].get_lot(), temp)) {
+							target = &thelist[i];
+							matching.push_back(target);
+						}
+					}
+				}
 			}
 		}
 		else if (temp == "ID") {
@@ -766,11 +994,25 @@ void cc_find(vector <Materials>& thelist) {
 						matching.push_back(target);
 					}
 				}
+				if (matching.size() == 0) {
+					partial = true;
+					for (int i = 0; i < thelist.size(); i++) {
+						if (partial_match(thelist[i].get_ID(), temp)) {
+							target = &thelist[i];
+							matching.push_back(target);
+						}
+					}
+				}
 			}
 		}
 		else if (temp == "weight") {
-			cout << "How much weight are you looking for?\n";
-			cin >> temp;
+			while (1) {
+				cout << "How much weight are you looking for?\n";
+				cin >> temp;
+				if (is_number(temp))
+					break;
+				cout << "That is not a valid number, please try again.\n";
+			}
 			if (matching.size() > 0) {
 				for (int i = 0; i < matching.size(); i++) {
 					if (matching[i] != nullptr) {
@@ -787,17 +1029,35 @@ void cc_find(vector <Materials>& thelist) {
 						matching.push_back(target);
 					}
 				}
+				if (matching.size() == 0) {
+					partial = true;
+					for (int i = 0; i < thelist.size(); i++) {
+						if (partial_match(thelist[i].get_weight(), temp)) {
+							target = &thelist[i];
+							matching.push_back(target);
+						}
+					}
+				}
 			}
 		}
 		if (matching.size() > 0) {
 			prep_screen("listing");
+			runsum = 0;
 			for (int i = 0; i < matching.size(); i++) {
 				if (matching[i] != nullptr) {
 					Materials(*matching[i]).print_table();
+					runsum += stod(Materials(*matching[i]).get_weight());
 				}
 			}
-			cout << "\nThis is a list of the matching materials.\n";
-			cout << "You can generate a report of the list, edit the materials in it, narrow it down/refine it, go back, or clear/restart the search.\n";
+			cout << "\nTotal weight: " << runsum << "kg\n";
+			if (!partial) {
+				cout << "\nThis is a list of the matching materials.\n";
+				cout << "You can generate a report of the list, edit the materials in it, narrow it down/refine it, go back, or clear/restart the search.\n";
+			}
+			else {
+				cout << "\nThis is a list of only partially matching materials- no perfect matches were found.\n";
+				cout << "You can generate a report of the list, edit the materials in it, narrow it down/refine it, go back, or clear/restart the search.\n";
+			}
 			cin >> temp;
 			if (temp == "r" || temp == "report") {
 				for (int i = 0; i < matching.size(); i++) {
@@ -848,7 +1108,7 @@ void cc_find(vector <Materials>& thelist) {
 						cin >> temp;
 						if (temp == "today")
 							temp = currentDate();
-						if (temp.size() == 8) {
+						if (is_valid_date(temp)) {
 							for (int i = 0; i < matching.size(); i++) {
 								if (matching[i] != nullptr)
 									thelist[find_index(thelist, matching[i])].set_date(temp);
@@ -856,7 +1116,7 @@ void cc_find(vector <Materials>& thelist) {
 							break;
 						}
 						else
-							cout << "That date is the wrong format, please enter one as MMDDYYYY.\n";
+							cout << "That is not a valid date, please enter one as MMDDYYYY or enter ???????? if a date is not available.\n";
 					}
 				}
 				else if (temp == "owner" || temp == "own") {
@@ -906,12 +1166,19 @@ void cc_find(vector <Materials>& thelist) {
 				}
 				else if (temp == "weight") {
 					while (1) {
-						cout << "Enter the remaining weight of the material, in kg, less than 10 significant digits.\n";
-						cin >> temp;
+						while (1) {
+							cout << "Enter the remaining weight of the material, in kg, less than 10 significant digits.\n";
+							cin >> temp;
+							if (is_number(temp))
+								break;
+							cout << "That is not a valid number, please try again.\n";
+						}
 						if (temp.size() < 10) {
 							for (int i = 0; i < matching.size(); i++) {
-								if (matching[i] != nullptr)
+								if (matching[i] != nullptr) {
 									thelist[find_index(thelist, matching[i])].set_weight(temp);
+									thelist[find_index(thelist, matching[i])].set_open("1");
+								}
 							}
 							break;
 						}
@@ -948,6 +1215,10 @@ void cc_find(vector <Materials>& thelist) {
 							cout << "That ID is too long, please enter one less than 10 characters.\n";
 					}
 				}
+				for (int i = 0; i < matching.size(); i++) {
+					if (matching[i] != nullptr)
+						add_recent(recent, find_index(thelist, matching[i]));
+				}
 			}
 			else if (temp == "narrow" || temp == "refine") {
 				continue;
@@ -983,7 +1254,6 @@ void cc_edit(vector <Materials>& thelist, vector <int>& recent) {
 			continue;
 		}
 		index = find_index(thelist, target);
-		add_recent(recent, index);
 		cout << "Which field to edit?\n";
 		cin >> temp;
 		if (temp == "back")
@@ -1000,6 +1270,7 @@ void cc_edit(vector <Materials>& thelist, vector <int>& recent) {
 				}
 				if (temp.size() < 10 && temp.size() > 3) {
 					thelist[index].set_code(temp);
+					add_recent(recent, index);
 					break;
 				}
 				else
@@ -1013,6 +1284,7 @@ void cc_edit(vector <Materials>& thelist, vector <int>& recent) {
 				cin >> temp;
 				if (temp.size() < 20) {
 					thelist[index].set_name(temp);
+					add_recent(recent, index);
 					break;
 				}
 				else
@@ -1026,6 +1298,7 @@ void cc_edit(vector <Materials>& thelist, vector <int>& recent) {
 				cin >> temp;
 				if (temp.size() < 15) {
 					thelist[index].set_man(temp);
+					add_recent(recent, index);
 					break;
 				}
 				else
@@ -1039,12 +1312,13 @@ void cc_edit(vector <Materials>& thelist, vector <int>& recent) {
 				cin >> temp;
 				if (temp == "today")
 					temp = currentDate();
-				if (temp.size() == 8) {
+				if (is_valid_date(temp)) {
 					thelist[index].set_date(temp);
+					add_recent(recent, index);
 					break;
 				}
 				else
-					cout << "That date is the wrong format, please enter one as MMDDYYYY.\n";
+					cout << "That is not a valid date, please enter one as MMDDYYYY or enter ???????? if a date is not available.\n";
 			}
 		}
 		else if (temp == "owner" || temp == "own") {
@@ -1054,6 +1328,7 @@ void cc_edit(vector <Materials>& thelist, vector <int>& recent) {
 				cin >> temp;
 				if (temp.size() < 20) {
 					thelist[index].set_own(temp);
+					add_recent(recent, index);
 					break;
 				}
 				else
@@ -1067,6 +1342,7 @@ void cc_edit(vector <Materials>& thelist, vector <int>& recent) {
 				cin >> temp;
 				if (temp.size() < 10) {
 					thelist[index].set_size(temp);
+					add_recent(recent, index);
 					break;
 				}
 				else
@@ -1080,6 +1356,7 @@ void cc_edit(vector <Materials>& thelist, vector <int>& recent) {
 				cin >> temp;
 				if (temp.size() < 10) {
 					thelist[index].set_lot(temp);
+					add_recent(recent, index);
 					break;
 				}
 				else
@@ -1088,11 +1365,18 @@ void cc_edit(vector <Materials>& thelist, vector <int>& recent) {
 		}
 		else if (temp == "weight") {
 			while (1) {
-				cout << "Enter the remaining weight of the material, in kg, less than 10 significant digits.\n";
-				cout << "The current value for this field is: " << thelist[index].get_weight() << endl;
-				cin >> temp;
+				while (1) {
+					cout << "Enter the remaining weight of the material, in kg, less than 10 significant digits.\n";
+					cout << "The current value for this field is: " << thelist[index].get_weight() << endl;
+					cin >> temp;
+					if (is_number(temp))
+						break;
+					cout << "That is not a valid number, please try again.\n";
+				}
 				if (temp.size() < 10) {
 					thelist[index].set_weight(temp);
+					thelist[index].set_open("1");
+					add_recent(recent, index);
 					break;
 				}
 				else
@@ -1102,10 +1386,12 @@ void cc_edit(vector <Materials>& thelist, vector <int>& recent) {
 		else if (temp == "open") {
 			cout << "The packaging is now labeled as 'open'.\n";
 			thelist[index].set_open("1");
+			add_recent(recent, index);
 		}
 		else if (temp == "closed") {
 			cout << "The packaging is now labeled as 'closed'.\n";
 			thelist[index].set_open("0");
+			add_recent(recent, index);
 		}
 		else if (temp == "ID") {
 			while (1) {
@@ -1114,6 +1400,7 @@ void cc_edit(vector <Materials>& thelist, vector <int>& recent) {
 				cin >> temp;
 				if (temp.size() < 10) {
 					thelist[index].set_ID(temp);
+					add_recent(recent, index);
 					break;
 				}
 				else
@@ -1128,8 +1415,13 @@ void cc_edit(vector <Materials>& thelist, vector <int>& recent) {
 				if (target != nullptr) {
 					thelist[index] = Materials(*target);
 					while (1) {
-						cout << "Enter the remaining weight of the material, in kg, less than 10 significant digits.\n";
-						cin >> temp;
+						while (1) {
+							cout << "Enter the remaining weight of the material, in kg, less than 10 significant digits.\n";
+							cin >> temp;
+							if (is_number(temp))
+								break;
+							cout << "That is not a valid number, please try again.\n";
+						}
 						if (temp.size() < 10) {
 							break;
 						}
@@ -1137,6 +1429,7 @@ void cc_edit(vector <Materials>& thelist, vector <int>& recent) {
 							cout << "That number is too precise, enter a number with less than 10 significant digits.\n";
 					}
 					thelist[index].set_weight(temp);
+					add_recent(recent, index);
 					break;
 				}
 				else
@@ -1147,8 +1440,6 @@ void cc_edit(vector <Materials>& thelist, vector <int>& recent) {
 			cout << "That field was not found, please choose one from the following: \n";
 			cout << "\n	barcode\n	name\n	manufacturer\n	date\n	owner\n	size\n	lot\n	weight\n	ID\n\n";
 			cout << "Or just type 'open' or 'closed' to change the packaging condition to the former or latter.\n";
-			cout << "\nHit any key to go back.\n";
-			cin >> temp;
 		}
 	}
 	return;
@@ -1191,8 +1482,13 @@ void cc_add(vector <Materials>& thelist, vector <int>& recent) {
 					temp_mat = *target;
 					temp_mat.clear_history();
 					while (1) {
-						cout << "Enter the remaining weight of the material, in kg, less than 10 significant digits.\n";
-						cin >> temp;
+						while (1) {
+							cout << "Enter the remaining weight of the material, in kg, less than 10 significant digits.\n";
+							cin >> temp;
+							if (is_number(temp))
+								break;
+							cout << "That is not a valid number, please try again.\n";
+						}
 						if (temp.size() < 10) {
 							break;
 						}
@@ -1235,12 +1531,12 @@ void cc_add(vector <Materials>& thelist, vector <int>& recent) {
 					cin >> temp;
 					if (temp == "today")
 						temp = currentDate();
-					if (temp.size() == 8) {
+					if (is_valid_date(temp)) {
 						info_set[3] = temp;
 						break;
 					}
 					else
-						cout << "That date is the wrong format, please enter one as MMDDYYYY.\n";
+						cout << "That is not a valid date, please enter one as MMDDYYYY or enter ???????? if a date is not available.\n";
 				}
 				while (1) {
 					cout << "Enter the name of the owner, less than 20 characters.\n";
@@ -1273,8 +1569,13 @@ void cc_add(vector <Materials>& thelist, vector <int>& recent) {
 						cout << "That number/code, please enter one less than 10 characters.\n";
 				}
 				while (1) {
-					cout << "Enter the remaining weight of the material, in kg, less than 10 significant digits.\n";
-					cin >> temp;
+					while (1) {
+						cout << "Enter the remaining weight of the material, in kg, less than 10 significant digits.\n";
+						cin >> temp;
+						if (is_number(temp))
+							break;
+						cout << "That is not a valid number, please try again.\n";
+					}
 					if (temp.size() < 10) {
 						info_set[7] = temp;
 						break;
@@ -1387,9 +1688,12 @@ void cc_report(vector <Materials>& thelist) {
 void cc_recent(vector <Materials>& thelist, vector <int>& recent) {
 	prep_screen("recent");
 	string temp;
+	double runsum = 0;
 	for (int i = 0; i < recent.size(); i++) {
 		thelist[recent[i]].print_table();
+		runsum += stod(thelist[recent[i]].get_weight());
 	}
+	cout << "\nTotal weight: " << runsum << "kg\n\n";
 	cout << "Would you like to generate a report of this list?\n";
 	cout << "\nOtherwise, hit any key or type 'back' to leave this menu.\n";
 	cin >> temp;
@@ -1424,10 +1728,15 @@ void cc_job(vector <Materials>& thelist, vector <int>& recent, vector <Jobs>& jo
 			cout << "What is the new job ID?\n";
 			cin >> temp;
 			tempjob.set_ID(temp);
-			cout << "What is the start date? Entering 'today' will put in the current date.\n";
-			cin >> temp;
-			if (temp == "today") {
-				temp = currentDate();
+			while (1) {
+				cout << "What is the start date? Entering 'today' will put in the current date.\n";
+				cin >> temp;
+				if (temp == "today") {
+					temp = currentDate();
+				}
+				if (is_valid_date(temp))
+					break;
+				cout << "That is not a valid date, please enter one as MMDDYYYY or enter ???????? if a date is not available.\n";
 			}
 			tempjob.set_sdate(temp);
 			cout << "Please enter the barcode(s) of the materials to be used. Enter 'done' when you are finished.\n";
@@ -1514,14 +1823,24 @@ void cc_job(vector <Materials>& thelist, vector <int>& recent, vector <Jobs>& jo
 						for (int i = 0; i < joblist[jindex].get_mats().size(); i++) {
 							cout << joblist[jindex].get_mats()[i] << endl;
 						}
-						cout << "\nWhat was the finishing date? Entering 'today' will put in the today's date.\n";
-						cin >> temp;
-						if (temp == "today") {
-							temp = currentDate();
+						while (1) {
+							cout << "What was the finishing date? Entering 'today' will put in the current date.\n";
+							cin >> temp;
+							if (temp == "today") {
+								temp = currentDate();
+							}
+							if (is_valid_date(temp))
+								break;
+							cout << "That is not a valid date, please enter one as MMDDYYYY or enter ???????? if a date is not available.\n";
 						}
 						joblist[jindex].set_edate(temp);
-						cout << "\nPlease manually enter the desired ending weight.\n";
-						cin >> temp;
+						while (1) {
+							cout << "\nPlease manually enter the desired ending weight.\n";
+							cin >> temp;
+							if (is_number(temp))
+								break;
+							cout << "That is not a valid number, please try again.\n";
+						}
 						joblist[jindex].add_eweight(temp);
 						joblist[jindex].finish();
 					}
@@ -1554,10 +1873,15 @@ void cc_job(vector <Materials>& thelist, vector <int>& recent, vector <Jobs>& jo
 						}
 					}
 					else if (temp == "finish" || temp == "f") {
-						cout << "What was the finishing date? Entering 'today' will put in the today's date.\n";
-						cin >> temp;
-						if (temp == "today") {
-							temp = currentDate();
+						while (1) {
+							cout << "What was the finishing date? Entering 'today' will put in the current date.\n";
+							cin >> temp;
+							if (temp == "today") {
+								temp = currentDate();
+							}
+							if (is_valid_date(temp))
+								break;
+							cout << "That is not a valid date, please enter one as MMDDYYYY or enter ???????? if a date is not available.\n";
 						}
 						joblist[jindex].set_edate(temp);
 						cout << "Please enter the barcode(s) of the materials that were used. Enter 'done' when you are finished.\n";
@@ -1580,8 +1904,13 @@ void cc_job(vector <Materials>& thelist, vector <int>& recent, vector <Jobs>& jo
 								cout << "That material has already been entered to finish the job- please enter another.\n";
 								continue;
 							}
-							cout << "Please enter the material's current weight.\n";
-							cin >> temp;
+							while (1) {
+								cout << "Please enter the material's current weight.\n";
+								cin >> temp;
+								if (is_number(temp))
+									break;
+								cout << "That is not a valid number, please try again.\n";
+							}
 							index = find_index(thelist, target);
 							thelist[index].set_weight(temp);
 							joblist[jindex].add_eweight(thelist[index].get_weight());
@@ -1615,7 +1944,8 @@ void cc_lots(vector <Materials> &thelist) {
 				if (!used)
 					usedlots.push_back(thelist[i]);
 			}
-			string filename = currentDate();
+			string filename = "reports/";
+			filename.append(currentDate());
 			filename.append("_lot_report.txt");
 			ofstream writefile(filename);
 			if (!writefile.is_open()) {
@@ -1643,6 +1973,51 @@ void cc_lots(vector <Materials> &thelist) {
 	}
 }
 
+void cc_usage(vector <Materials> &thelist) {
+	prep_screen("usage");
+	vector <Lots> lotlist;
+	vector <Materials> usedlots;
+	bool used;
+	Lots templot;
+	for (int i = 0; i < thelist.size(); i++) {
+		used = false;
+		for (int j = 0; j < usedlots.size(); j++) {
+			if (usedlots[j].get_lot() == thelist[i].get_lot())
+				used = true;
+		}
+		if (!used)
+			usedlots.push_back(thelist[i]);
+	}
+	for (int i = 0; i < usedlots.size(); i++) {
+		templot.build(usedlots[i], thelist);
+		if (used_recently(templot))
+			lotlist.push_back(templot);
+	}
+	string filename = "reports/";
+	filename.append(currentDate());
+	filename.append("_usage_report.txt");
+	ofstream writefile(filename);
+	if (writefile.is_open()) {
+		for (int i = 0; i < lotlist.size(); i++) {
+			lotlist[i].write(writefile);
+			writefile << "Total usage for " << currentMonth_word() << " " << currentYear() << ": " << endl;
+			writefile << "	Used:   " << lotlist[i].get_usage() << "kg\n";
+			writefile << "	Gained: " << lotlist[i].get_gained() << "kg\n\n";
+			lotlist[i].print();
+			cout << "Total usage for " << currentMonth_word() << " " << currentYear() << ": " << endl;
+			cout << "	Used:   " << lotlist[i].get_usage() << "kg\n";
+			cout << "	Gained: " << lotlist[i].get_gained() << "kg\n\n";
+		}
+		cout << "Done. Press any key to go back.\n";
+		writefile.close();
+	}
+	else {
+		cout << "There was a problem writing your file. Press any key to go back.\n";
+	}
+	string temp;
+	cin >> temp;
+}
+
 void cc_help() {
 	prep_screen("helping");
 	string temp;
@@ -1655,6 +2030,9 @@ void cc_help() {
 	cout << "Use 'save' to save the changes to the database without closing the program.\n";
 	cout << "To print out a complete list of the inventory, type 'list' or 'print' in the main menu.\n";
 	cout << "To generate a report on the inventory or material weight history, type 'report'.\n";
+	cout << "To add a job to memory, type 'jobs'.\n";
+	cout << "The create a history for a group of powder by lot, type 'lots'.\n";
+	cout << "To create a usage history of all the powder used in the current month, type 'usage'.\n";
 	cout << "For information about this program, type 'about'.\n";
 	cout << "\nContact Sameer Sajid for help with any bugs or problems during usage.\n";
 	cout << "\nssajid@qcml.org\n401-864-5676\n";
@@ -1671,4 +2049,16 @@ void cc_about() {
 	cout << "\nHit any key to leave this menu.\n";
 	cin >> temp;
 	return;
+}
+
+void cc_experimental() {
+	string temp1, temp2;
+	while (temp1 != "back" && temp2 != "back") {
+		cout << "Enter two words.\n";
+		cin >> temp1;
+		cin >> temp2;
+		if (temp1 == "back" || temp2 == "back")
+			continue;
+		cout << partial_match(temp1, temp2) << endl;
+	}
 }
