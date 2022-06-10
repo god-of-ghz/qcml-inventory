@@ -40,3 +40,17 @@ o	‘save’ does not automatically run when database is changed
 o	Program still prompts user for file input and output, does not run automatically
 o	Database file is unencrypted
 o	No method of exporting data
+
+V1.1 7/23/2014
+-	Program automatically reads and writes data upon starting and exiting
+-	No longer requires user input unless there is a problem
+-	Update menu heading
+-	Adjusted ‘size’ field to accommodate 10 characters, instead of 5
+-	Adjusted ‘print’ header to accommodate new ‘size’ length
+-	Known bugs:
+o	Program will still default to writing to ‘data.qcml’ using ‘save’ even if user specified a different source file during program start up
+-	Bug fixes:
+o	‘add’ and ‘edit’ will now appropriately check to make sure a barcode is or isn’t being used
+o	‘recent’ has been temporarily disabled to prevent program crashing
+o	Fixed potential bugs that could have resulted in runtime errors
+
