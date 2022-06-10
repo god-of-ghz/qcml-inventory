@@ -261,7 +261,7 @@ void command_center(vector <Materials>& thelist) {
 				}
 				else if (temp == "weight") {
 					while (1) {
-						cout << "Enter the remaining weight of the material, in lbs, less than 10 significant digits.\n";
+						cout << "Enter the remaining weight of the material, in kg, less than 10 significant digits.\n";
 						cout << "The current value for this field is: " << thelist[index].get_weight() << endl;
 						cin >> temp;
 						if (temp.size() < 10) {
@@ -412,6 +412,8 @@ void command_center(vector <Materials>& thelist) {
 							}
 							recent.push_back(target);
 							temp_mat = *target;
+							temp_mat.clear_history();
+							temp_mat.add_history(temp_mat.get_weight(), currentDate());
 							thelist.push_back(temp_mat);
 							break;
 						}
@@ -480,7 +482,7 @@ void command_center(vector <Materials>& thelist) {
 								cout << "That number/code, please enter one less than 10 characters.\n";
 						}
 						while (1) {
-							cout << "Enter the remaining weight of the material, in lbs, less than 10 significant digits.\n";
+							cout << "Enter the remaining weight of the material, in kg, less than 10 significant digits.\n";
 							cin >> temp;
 							if (temp.size() < 10) {
 								info_set[7] = temp;
@@ -513,9 +515,9 @@ void command_center(vector <Materials>& thelist) {
 							else
 								cout << "That ID is too long, please enter one less than 10 characters.\n";
 						}
-						temp_mat = process_material(info_set);
+						thelist.push_back(process_material(info_set));
+						thelist[thelist.size() - 1].add_history(info_set[7], currentDate());
 						delete[] info_set;
-						thelist.push_back(temp_mat);
 					}
 				}
 			}
@@ -652,7 +654,7 @@ void write_to_file(vector <Materials>& thelist, string filename) {
 void prep_screen(string menu) {
 	system("cls");
 	cout << "+-------------------------------------+\n";
-	cout << "|       QCML INVENTORY SYSTEM V1.2    |\n";
+	cout << "|       QCML INVENTORY SYSTEM V1.3    |\n";
 	cout << "+-------------------------------------+\n\n";
 
 	if (menu == "main")
@@ -681,12 +683,12 @@ void prep_screen(string menu) {
 		cout << "~~~~~~~~~~~~~~~COMING SOON!~~~~~~~~~~~~~\n\n";
 
 	if (menu == "listing" || menu == "recent") {
-		cout << "BARCODE    MATERIAL             MANUFACTURER    DATE            OWNER                SIZE       LOT        WEIGHT     OPEN  ID        \n";
+		cout << "BARCODE    MATERIAL             MANUFACTURER    DATE            OWNER                SIZE       LOT        WEIGHT(kg) OPEN  ID        \n";
 		cout << "--------------------------------------------------------------------------------------------------------------------------------------\n";
 	}
 	else if (menu == "history") {
 		cout << "Enter the barcode of the material whose history you would like or type 'back.\n\n";
-		cout << "BARCODE    WEIGHT     DATE           \n";
+		cout << "BARCODE    WEIGHT(kg) DATE           \n";
 		cout << "-------------------------------------\n";
 	}
 
@@ -732,7 +734,8 @@ void read_history(vector <Materials>& thelist) {
 		index = find_index(thelist, tempc);
 		readfile >> tempw;
 		readfile >> tempd;
-		thelist[index].add_history(tempw, tempd);
+		if (!readfile.eof())
+			thelist[index].add_history(tempw, tempd);
 	}
 	readfile.close();
 }

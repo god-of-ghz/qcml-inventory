@@ -69,6 +69,7 @@ public:
 	void set_lot(string a) { lot = a; }
 	void set_weight(string a);
 	void add_history(string a, string b);
+	void clear_history();
 	void set_open(string a) { open = a; }
 	void set_ID(string a) { ID = a; }
 
@@ -107,8 +108,9 @@ void Materials::clear() {
 	size.clear();
 	lot.clear();
 	weight.clear();
-	open = "no";
+	open.clear();
 	ID.clear();
+	clear_history();
 }
 
 void Materials::operator= (const Materials& target) {
@@ -201,6 +203,14 @@ void Materials::add_history(string a, string b) {
 	history[1].push_back(b);
 }
 
+void Materials::clear_history() {
+	if (history.size() == 2) {
+		history[0].clear();
+		history[1].clear();
+	}
+	history.clear();
+}
+
 const string currentDate() {
 	time_t     now = time(0);
 	struct tm  tstruct;
@@ -209,6 +219,5 @@ const string currentDate() {
 	// Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
 	// for more information about date/time format
 	strftime(buf, sizeof(buf), "%m%d%Y", &tstruct);
-
 	return buf;
 }
