@@ -1,3 +1,6 @@
+This was written when I was brand-new to programming. I have a single college course, the rest was self-taught. Be nice.
+
+
 Quad City Manufacturing Laboratory Inventory Program
 User Manual and Log
 
